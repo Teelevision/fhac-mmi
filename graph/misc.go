@@ -13,12 +13,12 @@ func (this id) GetId() uint {
     return uint(this)
 }
 
-// provides unique ids
-type idProvider uint
+// provides incrementing ids
+type idProvider id
 
-// returns a new id that was not previously used
-func (this idProvider) NewId() uint {
-    id := uint(this)
-    this++
-    return id
+// returns a new id that is one bigger than the previous one
+func (this *idProvider) NewId() id {
+    i := id(*this)
+    *this++
+    return i
 }

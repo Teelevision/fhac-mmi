@@ -41,7 +41,7 @@ func (this *Graph) NewVertex() *vertex {
 
     // create with empty map of ingoing and outgoing edges
     vertex := &vertex{
-        id: id(this.edgesIdProvider.NewId()),
+        id: this.edgesIdProvider.NewId(),
         ingoingEdges: edges{},
         outgoingEdges: edges{},
     }
@@ -63,7 +63,7 @@ func (this *Graph) NewWeightedEdge(source, target VertexInterface, weight float6
 
     // create edge with the given source and target and a default weight
     edge := &edge{
-        id: id(this.verticesIdProvider.NewId()),
+        id: this.verticesIdProvider.NewId(),
         source: source,
         target: target,
         weight: weight,

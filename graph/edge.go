@@ -101,11 +101,12 @@ func (this mergedEdges) Num() (num uint) {
 }
 
 // returns a map of all edges
-func (this mergedEdges) All() (allEdges map[uint]EdgeInterface) {
+func (this mergedEdges) All() map[uint]EdgeInterface {
+    allEdges := map[uint]EdgeInterface{}
     for _, edges := range this {
         for id, edge := range edges.All() {
             allEdges[id] = edge
         }
     }
-    return
+    return allEdges
 }
