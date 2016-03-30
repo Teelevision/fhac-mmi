@@ -41,7 +41,7 @@ type VerticesInterface interface {
 // interface for an editable map of vertices
 type editableVerticesInterface interface {
     VerticesInterface
-    Add(VertexInterface)
+    add(VertexInterface)
 }
 
 // default map of vertices
@@ -56,7 +56,7 @@ func (this vertices) Get(id uint) VertexInterface {
 }
 
 // adds a vertex
-func (this vertices) Add(vertex VertexInterface) {
+func (this vertices) add(vertex VertexInterface) {
     this[vertex.GetId()] = vertex
 }
 

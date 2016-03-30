@@ -13,19 +13,19 @@ type EdgeInterface interface {
 // a basic edge
 type edge struct {
     id
-    source VertexInterface
-    target VertexInterface
+    start  VertexInterface
+    end    VertexInterface
     weight float64
 }
 
 // returns the start vertex
 func (this edge) GetStartVertex() VertexInterface {
-    return this.source;
+    return this.start;
 }
 
 // returns the end vertex
 func (this edge) GetEndVertex() VertexInterface {
-    return this.target;
+    return this.end;
 }
 
 // returns the weight
@@ -41,7 +41,7 @@ func (this *edge) SetWeight(weight float64) {
 // interface for a map of edges
 type EdgesInterface interface {
     Get(uint) EdgeInterface
-    Num() uint
+    Count() uint
     All() map[uint]EdgeInterface
 }
 
@@ -68,7 +68,7 @@ func (this edges) add(edge EdgeInterface) {
 }
 
 // returns the number of edges
-func (this edges) Num() uint {
+func (this edges) Count() uint {
     return uint(len(this))
 }
 
@@ -83,6 +83,11 @@ func (this edges) All() map[uint]EdgeInterface {
 type mergedEdges []EdgesInterface
 
 // returns the edge for the id or nil if not found
+func (this *mergedEdges) merge(edges EdgesInterface) {
+    *this = append(*this, edges)
+}
+
+// returns the edge for the id or nil if not found
 func (this mergedEdges) Get(id uint) EdgeInterface {
     for _, edges := range this {
         if edge := edges.Get(id); edge != nil {
@@ -93,9 +98,9 @@ func (this mergedEdges) Get(id uint) EdgeInterface {
 }
 
 // returns the number of edges
-func (this mergedEdges) Num() (num uint) {
+func (this mergedEdges) Count() (num uint) {
     for _, edges := range this {
-        num += edges.Num()
+        num += edges.Count()
     }
     return
 }

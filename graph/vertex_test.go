@@ -21,14 +21,17 @@ func TestVertex(t *testing.T) {
         outgoingEdges: outgoingEdges,
     }
 
+    // test GetId()
     if v.GetId() != i {
         t.Errorf("Vertex ID should be %d, got %d.", i, v.GetId())
     }
 
+    // test GetIngoingEdges()
     if !reflect.DeepEqual(v.GetIngoingEdges(), ingoingEdges) {
         t.Error("Could not retrieve ingoing edges.")
     }
 
+    // test GetOutgoingEdges()
     if !reflect.DeepEqual(v.GetOutgoingEdges(), outgoingEdges) {
         t.Error("Could not retrieve outgoing edges.")
     }
@@ -40,21 +43,40 @@ func TestVertices(t *testing.T) {
     idProvider := idProvider(0)
     v := vertices{}
 
+    // test Add()
     var ids [10]id
-    var vs [10]vertex
+    var vs [10]*vertex
     for i := 0; i < 10; i++ {
         ids[i] = idProvider.NewId()
-        vs[i] = vertex{id: ids[i]}
-        v.Add(vs[i])
+        vs[i] = &vertex{id: ids[i]}
+        v.add(vs[i])
     }
 
+    // test Count()
     if v.Count() != 10 {
         t.Errorf("Vertices should contain 10 elements, got %d.", v.Count())
     }
 
+    // test Get()
     for i, id := range ids {
         if !reflect.DeepEqual(v.Get(uint(id)), vs[i]) {
             t.Error("Could not recover vertices.")
         }
+    }
+
+    // test All()
+    n := 0;
+    for id, vx := range v.All() {
+        for i, id2 := range ids {
+            if id == uint(id2) {
+                if !reflect.DeepEqual(vx, vs[i]) {
+                    t.Error("Could not recover vertices.")
+                }
+                n++
+            }
+        }
+    }
+    if n != 10 {
+        t.Errorf("Vertices should contain 10 elements, got %d.", n)
     }
 }

@@ -47,7 +47,7 @@ func (this *Graph) NewVertex() *vertex {
     }
 
     // add to this graph
-    this.vertices.Add(vertex)
+    this.vertices.add(vertex)
 
     return vertex
 }
@@ -64,8 +64,8 @@ func (this *Graph) NewWeightedEdge(source, target VertexInterface, weight float6
     // create edge with the given source and target and a default weight
     edge := &edge{
         id: this.verticesIdProvider.NewId(),
-        source: source,
-        target: target,
+        start: source,
+        end: target,
         weight: weight,
     }
 
