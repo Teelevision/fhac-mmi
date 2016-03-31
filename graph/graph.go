@@ -8,7 +8,7 @@ type GraphInterface interface {
 }
 
 // default graph
-type Graph struct {
+type graph struct {
     vertices           vertices
     edges              edges
     verticesIdProvider idProvider
@@ -16,9 +16,9 @@ type Graph struct {
 }
 
 // init a new graph
-func NewGraph() *Graph {
+func NewGraph() *graph {
     // contains empty maps of vertices and edges
-    return &Graph{
+    return &graph{
         vertices: vertices{},
         edges: edges{},
         verticesIdProvider: idProvider(0),
@@ -27,17 +27,17 @@ func NewGraph() *Graph {
 }
 
 // returns the vertices map
-func (this Graph) GetVertices() VerticesInterface {
+func (this graph) GetVertices() VerticesInterface {
     return this.vertices
 }
 
 // returns the edges map
-func (this Graph) GetEdges() EdgesInterface {
+func (this graph) GetEdges() EdgesInterface {
     return this.edges
 }
 
 // creates, adds and returns a new vertex
-func (this *Graph) NewVertex() *vertex {
+func (this *graph) NewVertex() *vertex {
 
     // create with empty map of ingoing and outgoing edges
     vertex := &vertex{
@@ -53,13 +53,13 @@ func (this *Graph) NewVertex() *vertex {
 }
 
 // creates, adds and returns a new edge with a weight of 1
-func (this *Graph) NewEdge(source, target VertexInterface) EdgeInterface {
+func (this *graph) NewEdge(source, target VertexInterface) EdgeInterface {
     return this.NewWeightedEdge(source, target, 1.0)
 }
 
 
 // creates, adds and returns a new edge
-func (this *Graph) NewWeightedEdge(source, target VertexInterface, weight float64) EdgeInterface {
+func (this *graph) NewWeightedEdge(source, target VertexInterface, weight float64) EdgeInterface {
 
     // create edge with the given source and target and a default weight
     edge := &edge{
