@@ -83,9 +83,9 @@ func TestEdges(t *testing.T) {
 
     // test All()
     n := 0;
-    for id, ex := range e.All() {
-        for i, id2 := range eid {
-            if id == uint(id2) {
+    for _, ex := range e.All() {
+        for i, id := range eid {
+            if ex.GetId() == uint(id) {
                 if !reflect.DeepEqual(ex, es[i]) {
                     t.Error("Could not recover edges.")
                 }
@@ -142,9 +142,9 @@ func TestMergedEdges(t *testing.T) {
 
     // test All()
     n := 0;
-    for id, ex := range e.All() {
-        for i, id2 := range eid {
-            if id == uint(id2) {
+    for _, ex := range e.All() {
+        for i, id := range eid {
+            if ex.GetId() == uint(id) {
                 if !reflect.DeepEqual(ex, es[i]) {
                     t.Error("Could not recover edges.")
                 }

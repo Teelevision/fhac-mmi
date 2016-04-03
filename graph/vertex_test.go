@@ -10,9 +10,9 @@ func TestVertex(t *testing.T) {
 
     idProvider := idProvider(0)
     i := uint(123)
-    ingoingEdges := edges{}
+    ingoingEdges := &edges{}
     ingoingEdges.add(&edge{id: idProvider.NewId()})
-    outgoingEdges := edges{}
+    outgoingEdges := &edges{}
     outgoingEdges.add(&edge{id: idProvider.NewId()})
 
     v := vertex{
@@ -35,6 +35,8 @@ func TestVertex(t *testing.T) {
     if !reflect.DeepEqual(v.GetOutgoingEdges(), outgoingEdges) {
         t.Error("Could not retrieve outgoing edges.")
     }
+
+    // TODO: test GetNeighbours()
 }
 
 // tests the vertices methods
@@ -66,9 +68,9 @@ func TestVertices(t *testing.T) {
 
     // test All()
     n := 0;
-    for id, vx := range v.All() {
-        for i, id2 := range ids {
-            if id == uint(id2) {
+    for _, vx := range v.All() {
+        for i, id := range ids {
+            if vx.GetId() == uint(id) {
                 if !reflect.DeepEqual(vx, vs[i]) {
                     t.Error("Could not recover vertices.")
                 }

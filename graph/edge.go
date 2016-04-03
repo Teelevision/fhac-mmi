@@ -42,7 +42,7 @@ func (this *edge) SetWeight(weight float64) {
 type EdgesInterface interface {
     Get(uint) EdgeInterface
     Count() uint
-    All() map[uint]EdgeInterface
+    All() []EdgeInterface
 }
 
 // interface for an editable map of edges
@@ -52,19 +52,21 @@ type editableEdgesInterface interface {
 }
 
 // a simple map of edges
-type edges map[uint]EdgeInterface
+type edges []EdgeInterface
 
 // returns the edge with the given id or nil if not found
 func (this edges) Get(id uint) EdgeInterface {
-    if edge, ok := this[id]; ok {
-        return edge
+    for _, e := range this {
+        if e.GetId() == id {
+            return e
+        }
     }
     return nil
 }
 
 // adds an edge
-func (this edges) add(edge EdgeInterface) {
-    this[edge.GetId()] = edge
+func (this *edges) add(edge EdgeInterface) {
+    *this = append(*this, edge)
 }
 
 // returns the number of edges
@@ -72,8 +74,8 @@ func (this edges) Count() uint {
     return uint(len(this))
 }
 
-// returns map of all edges
-func (this edges) All() map[uint]EdgeInterface {
+// returns slice of all edges
+func (this edges) All() []EdgeInterface {
     return this
 }
 
@@ -106,11 +108,11 @@ func (this mergedEdges) Count() (num uint) {
 }
 
 // returns a map of all edges
-func (this mergedEdges) All() map[uint]EdgeInterface {
-    allEdges := map[uint]EdgeInterface{}
+func (this mergedEdges) All() []EdgeInterface {
+    allEdges := make([]EdgeInterface, 0, this.Count())
     for _, edges := range this {
-        for id, edge := range edges.All() {
-            allEdges[id] = edge
+        for _, edge := range edges.All() {
+            allEdges = append(allEdges, edge)
         }
     }
     return allEdges

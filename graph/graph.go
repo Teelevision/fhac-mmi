@@ -5,6 +5,7 @@ package graph
 type GraphInterface interface {
     GetVertices() VerticesInterface
     GetEdges() EdgesInterface
+    IsDirected() bool
 }
 
 // default graph
@@ -13,17 +14,39 @@ type graph struct {
     edges              edges
     verticesIdProvider idProvider
     edgesIdProvider    idProvider
+    directed           bool
 }
 
 // init a new graph
-func NewGraph() *graph {
+func CreateNewGraph(directed bool) *graph {
     // contains empty maps of vertices and edges
     return &graph{
         vertices: vertices{},
         edges: edges{},
         verticesIdProvider: idProvider(0),
         edgesIdProvider: idProvider(0),
+        directed: directed,
     }
+}
+
+// init a new directed graph
+func DirectedGraph() *graph {
+    return CreateNewGraph(true)
+}
+
+// init a new undirected graph
+func UndirectedGraph() *graph {
+    return CreateNewGraph(false)
+}
+
+// returns whether the graph is directed
+func (this graph) IsDirected() bool {
+    return this.directed
+}
+
+// returns whether the graph is directed
+func (this *graph) SetDirected(directed bool) {
+    this.directed = directed
 }
 
 // returns the vertices map
@@ -42,8 +65,8 @@ func (this *graph) NewVertex() *vertex {
     // create with empty map of ingoing and outgoing edges
     vertex := &vertex{
         id: this.edgesIdProvider.NewId(),
-        ingoingEdges: edges{},
-        outgoingEdges: edges{},
+        ingoingEdges: &edges{},
+        outgoingEdges: &edges{},
     }
 
     // add to this graph

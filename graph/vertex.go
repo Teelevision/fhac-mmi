@@ -7,6 +7,9 @@ type VertexInterface interface {
     GetEdges() EdgesInterface
     GetIngoingEdges() editableEdgesInterface
     GetOutgoingEdges() editableEdgesInterface
+    GetNeighbours() VerticesInterface
+    GetIngoingNeighbours() VerticesInterface
+    GetOutgoingNeighbours() VerticesInterface
 }
 
 // a basic vertex
@@ -31,11 +34,38 @@ func (this vertex) GetOutgoingEdges() editableEdgesInterface {
     return this.outgoingEdges
 }
 
+// returns a combination of ingoing an outgoing edges
+func (this vertex) GetNeighbours() VerticesInterface {
+    v := this.GetOutgoingNeighbours().(vertices)
+    for _, n := range this.GetIngoingNeighbours().All() {
+        v.add(n)
+    }
+    return v
+}
+
+// returns the ingoing edges
+func (this vertex) GetIngoingNeighbours() VerticesInterface {
+    v := vertices{}
+    for _, edge := range this.ingoingEdges.All() {
+        v.add(edge.GetStartVertex())
+    }
+    return v
+}
+
+// returns the outgoing edges
+func (this vertex) GetOutgoingNeighbours() VerticesInterface {
+    v := vertices{}
+    for _, edge := range this.outgoingEdges.All() {
+        v.add(edge.GetEndVertex())
+    }
+    return v
+}
+
 // interface for a map of vertices
 type VerticesInterface interface {
     Get(uint) VertexInterface
     Count() uint
-    All() map[uint]VertexInterface
+    All() []VertexInterface
 }
 
 // interface for an editable map of vertices
@@ -45,19 +75,21 @@ type editableVerticesInterface interface {
 }
 
 // default map of vertices
-type vertices map[uint]VertexInterface
+type vertices []VertexInterface
 
 // returns single vertex or nil if not found
 func (this vertices) Get(id uint) VertexInterface {
-    if vertex, ok := this[id]; ok {
-        return vertex
+    for _, v := range this {
+        if v.GetId() == id {
+            return v
+        }
     }
     return nil
 }
 
 // adds a vertex
-func (this vertices) add(vertex VertexInterface) {
-    this[vertex.GetId()] = vertex
+func (this *vertices) add(vertex VertexInterface) {
+    *this = append(*this, vertex)
 }
 
 // returns the count of vertices
@@ -65,7 +97,7 @@ func (this vertices) Count() uint {
     return uint(len(this))
 }
 
-// returns map of all vertices
-func (this vertices) All() map[uint]VertexInterface {
+// returns slice of all vertices
+func (this vertices) All() []VertexInterface {
     return this
 }

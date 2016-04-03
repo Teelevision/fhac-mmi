@@ -7,7 +7,7 @@ import (
 // tests the graph methods
 func TestGraph(t *testing.T) {
 
-    g := NewGraph()
+    g := UndirectedGraph()
 
     // test NewVertex()
     var v [10]VertexInterface

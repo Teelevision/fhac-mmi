@@ -5,7 +5,7 @@ import "github.com/teelevision/fhac-mmi/graph"
 
 func main() {
 
-    g := graph.NewGraph()
+    g := graph.UndirectedGraph()
 
     vA := g.NewVertex()
     vB := g.NewVertex()
