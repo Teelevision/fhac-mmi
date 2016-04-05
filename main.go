@@ -18,10 +18,15 @@ func main() {
     g.SetDirected(false)
     graph := algorithm.Graph{g}
 
-    numComponents := graph.GetNumConnectedComponents()
+    initTime := time.Now()
+
+    numComponents1 := algorithm.GetNumConnectedComponents(graph, algorithm.BreadthFirstSearch)
+    numComponents2 := algorithm.GetNumConnectedComponents(graph, algorithm.DepthFirstSearch)
 
     endTime := time.Now()
 
-    fmt.Println("Zusammenhangskomponentent: ", numComponents)
+    fmt.Println("Zusammenhangskomponentent:", numComponents1, numComponents2)
     fmt.Printf("Duration: %v\n", endTime.Sub(startTime))
+    fmt.Printf(" - Initialization: %v\n", initTime.Sub(startTime))
+    fmt.Printf(" - Calulation: %v\n", endTime.Sub(initTime))
 }

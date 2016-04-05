@@ -15,3 +15,6 @@ func (this Graph) getNeighboursOfVertex(vertex graph.VertexInterface) graph.Vert
     }
     return vertex.GetNeighbours()
 }
+
+// a function that takes a start vertex and then traverses the graph
+type TraverseFunction func(Graph, graph.VertexInterface) []graph.VertexInterface

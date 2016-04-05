@@ -1,11 +1,16 @@
 package algorithm
 
 import (
-    "github.com/teelevision/fhac-mmi/graph"
+    graphLib "github.com/teelevision/fhac-mmi/graph"
 )
 
-// calculates the number of connected components
+// simple wrapper
 func (this Graph) GetNumConnectedComponents() uint {
+    return GetNumConnectedComponents(this, TraverseFunction(BreadthFirstSearch))
+}
+
+// calculates the number of connected components using a traverse function
+func GetNumConnectedComponents(this Graph, tf TraverseFunction) uint {
 
     // 1. pick a vertex that was not visited yet
     // 2. visit all vertices that are somehow connected
@@ -15,7 +20,7 @@ func (this Graph) GetNumConnectedComponents() uint {
     numComponents := uint(0)
 
     // to keep track of which vertices were visited yet
-    visited := map[graph.VertexInterface]bool{}
+    visited := map[graphLib.VertexInterface]bool{}
 
     // loop all vertices
     for _, vertex := range this.GetVertices().All() {
@@ -27,7 +32,7 @@ func (this Graph) GetNumConnectedComponents() uint {
             numComponents++
 
             // actual search
-            result := this.BreadthFirstSearch(vertex)
+            result := tf(this, vertex)
 
             // early result
             // the number of newly visited vertices completes the search

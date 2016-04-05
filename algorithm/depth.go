@@ -1,16 +1,21 @@
 package algorithm
 
 import (
-    "github.com/teelevision/fhac-mmi/graph"
+    graphLib "github.com/teelevision/fhac-mmi/graph"
 )
 
+// simple wrapper
+func (this Graph) DepthFirstSearch(start graphLib.VertexInterface) []graphLib.VertexInterface {
+    return DepthFirstSearch(this, start)
+}
+
 // performs a depth-first search on the graph and returns a slice of vertices
-func (this Graph) DepthFirstSearch(start graph.VertexInterface) []graph.VertexInterface {
+func DepthFirstSearch(graph Graph, start graphLib.VertexInterface) []graphLib.VertexInterface {
 
     helper := depthFirstSearchHelper{
-        graph: this,
-        result: []graph.VertexInterface{},
-        discovered: map[graph.VertexInterface]bool{},
+        graph: graph,
+        result: []graphLib.VertexInterface{},
+        discovered: map[graphLib.VertexInterface]bool{},
     }
 
     helper.search(start)
@@ -23,14 +28,14 @@ type depthFirstSearchHelper struct {
     graph      Graph
 
     // the result order
-    result     []graph.VertexInterface
+    result     []graphLib.VertexInterface
 
     // to keep track of discovered vertices
-    discovered map[graph.VertexInterface]bool
+    discovered map[graphLib.VertexInterface]bool
 }
 
 // performs a depth-first search on the graph and returns a slice of vertices
-func (this *depthFirstSearchHelper) search(vertex graph.VertexInterface) {
+func (this *depthFirstSearchHelper) search(vertex graphLib.VertexInterface) {
 
     // discover vertex
     this.result = append(this.result, vertex)
