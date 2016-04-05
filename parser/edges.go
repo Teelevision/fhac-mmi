@@ -7,14 +7,14 @@ import (
 )
 
 // parses a file that contains an edges list
-func ParseEdgesFile(file string, withWeights bool) (graphLib.GraphInterface, error) {
+func ParseEdgesFile(file string, withWeights bool) (*graphLib.Graph, error) {
     f, _ := os.Open(file)
     graph, err := ParseEdges(f, withWeights)
     return graph, err
 }
 
 // parses an edges list with or without weights
-func ParseEdges(reader io.Reader, withWeights bool) (graphLib.GraphInterface, error) {
+func ParseEdges(reader io.Reader, withWeights bool) (*graphLib.Graph, error) {
 
     // parse vertices
     graph, vertices, scanner, err := parseHeader(reader)

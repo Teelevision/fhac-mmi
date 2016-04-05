@@ -1,22 +1,27 @@
 package main
 
-import "fmt"
-import "github.com/teelevision/fhac-mmi/graph"
+import (
+    "github.com/teelevision/fhac-mmi/parser"
+    "github.com/teelevision/fhac-mmi/algorithm"
+    "fmt"
+    "time"
+)
 
 func main() {
 
-    g := graph.UndirectedGraph()
+    startTime := time.Now()
 
-    vA := g.NewVertex()
-    vB := g.NewVertex()
-    eA := g.NewEdge(vA, vB)
-    eB := g.NewEdge(vB, vA)
-    eC := g.NewEdge(vA, vA)
+    g, err := parser.ParseEdgesFile("prakt/Graph4.txt", false)
+    if err != nil {
+        panic(err)
+    }
+    g.SetDirected(false)
+    graph := algorithm.Graph{g}
 
-    fmt.Println(eA)
-    fmt.Println(eB)
-    fmt.Println(eC)
-    fmt.Printf("%v+\n", vA)
-    fmt.Printf("%v+\n", vB)
+    numComponents := graph.GetNumConnectedComponents()
 
+    endTime := time.Now()
+
+    fmt.Println("Zusammenhangskomponentent: ", numComponents)
+    fmt.Printf("Duration: %v\n", endTime.Sub(startTime))
 }

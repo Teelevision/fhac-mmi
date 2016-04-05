@@ -7,14 +7,14 @@ import (
 )
 
 // parses a file that contains an adjacency matrix
-func ParseAdjacencyMatrixFile(file string) (graphLib.GraphInterface, error) {
+func ParseAdjacencyMatrixFile(file string) (*graphLib.Graph, error) {
     f, _ := os.Open(file)
     graph, err := ParseAdjacencyMatrix(f)
     return graph, err
 }
 
 // parses an adjacency matrix
-func ParseAdjacencyMatrix(reader io.Reader) (graphLib.GraphInterface, error) {
+func ParseAdjacencyMatrix(reader io.Reader) (*graphLib.Graph, error) {
 
     // parse vertices
     graph, vertices, scanner, err := parseHeader(reader)
