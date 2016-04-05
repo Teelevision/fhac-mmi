@@ -6,8 +6,8 @@ import (
     "reflect"
 )
 
-// test the Breitensuche
-func TestBreitensuche(t *testing.T) {
+// test the breadth-first search
+func TestBreadthFirstSearch(t *testing.T) {
 
     g := graph.UndirectedGraph()
     a := Graph{g}

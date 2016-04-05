@@ -2,7 +2,6 @@ package algorithm
 
 import (
     "github.com/teelevision/fhac-mmi/graph"
-    "fmt"
 )
 
 // calculates the number of connected components
@@ -33,7 +32,6 @@ func (this Graph) GetNumConnectedComponents() uint {
             // early result
             // the number of newly visited vertices completes the search
             if uint(len(visited) + len(result)) == numVertices {
-                fmt.Println("early")
                 return numComponents
             }
 
