@@ -8,7 +8,7 @@ type Graph struct {
     graph.GraphInterface
 }
 
-func (this Graph) Breitensuche(start graph.VertexInterface) []graph.VertexInterface {
+func (this Graph) BreadthFirstSearch(start graph.VertexInterface) []graph.VertexInterface {
 
     result := []graph.VertexInterface{start}
     checked := map[graph.VertexInterface]bool{start: true}

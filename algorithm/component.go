@@ -28,7 +28,7 @@ func (this Graph) GetNumConnectedComponents() uint {
             numComponents++
 
             // actual search
-            result := this.Breitensuche(vertex)
+            result := this.BreadthFirstSearch(vertex)
 
             // early result
             // the number of newly visited vertices completes the search

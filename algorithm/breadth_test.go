@@ -20,12 +20,12 @@ func TestBreitensuche(t *testing.T) {
 
     test := func(start graph.VertexInterface, orderDirected []graph.VertexInterface, orderUndirected []graph.VertexInterface) {
         g.SetDirected(true)
-        vertices := a.Breitensuche(start)
+        vertices := a.BreadthFirstSearch(start)
         if !reflect.DeepEqual(vertices, orderDirected) {
             t.Errorf("Expected\n    %v,\ngot %v.", orderDirected, vertices)
         }
         g.SetDirected(false)
-        vertices = a.Breitensuche(start)
+        vertices = a.BreadthFirstSearch(start)
         if !reflect.DeepEqual(vertices, orderUndirected) {
             t.Errorf("Expected\n    %v,\ngot %v.", orderUndirected, vertices)
         }
