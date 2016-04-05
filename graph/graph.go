@@ -65,8 +65,8 @@ func (this *Graph) NewVertex() *vertex {
     // create with empty map of ingoing and outgoing edges
     vertex := &vertex{
         id: this.edgesIdProvider.NewId(),
-        ingoingEdges: &edges{},
-        outgoingEdges: &edges{},
+        ingoingEdges: newEdges(10),
+        outgoingEdges: newEdges(10),
     }
 
     // add to this graph

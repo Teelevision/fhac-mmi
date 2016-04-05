@@ -8,6 +8,8 @@ import (
     "flag"
     "errors"
     "github.com/teelevision/fhac-mmi/graph"
+    "os"
+    "runtime/pprof"
 )
 
 var config struct {
@@ -21,6 +23,7 @@ var config struct {
     connectedComponents *bool
     startVertex         *int
     showTime            *bool
+    cpuProfile          *string
 }
 
 // inits the current config
@@ -34,6 +37,7 @@ func initConfig() {
     config.connectedComponents = flag.Bool("components", false, "connected components")
     config.startVertex = flag.Int("start", 0, "start vertex")
     config.showTime = flag.Bool("t", false, "show time")
+    config.cpuProfile = flag.String("cpuprofile", "", "write cpu profile to file")
 
     flag.Parse()
 
@@ -62,6 +66,16 @@ func parseFile(file string) (*graph.Graph, error) {
 func main() {
 
     initConfig()
+
+    // cpu profile
+    if *config.cpuProfile != "" {
+        f, err := os.Create(*config.cpuProfile)
+        if err != nil {
+            panic(err)
+        }
+        pprof.StartCPUProfile(f)
+        defer pprof.StopCPUProfile()
+    }
 
     // do it all for every file
     for i, file := range config.files {

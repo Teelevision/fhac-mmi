@@ -54,6 +54,12 @@ type editableEdgesInterface interface {
 // a simple map of edges
 type edges []EdgeInterface
 
+// creates new instance of edges with the given capacity
+func newEdges(capacity int) *edges {
+    e := edges(make([]EdgeInterface, 0, capacity))
+    return &e
+}
+
 // returns the edge with the given id or nil if not found
 func (this edges) Get(id uint) EdgeInterface {
     for _, e := range this {
@@ -66,6 +72,12 @@ func (this edges) Get(id uint) EdgeInterface {
 
 // adds an edge
 func (this *edges) add(edge EdgeInterface) {
+    // if slice is full, double its size
+    if len(*this) == cap(*this) {
+        newSlice := make([]EdgeInterface, len(*this), 2 * cap(*this) + 1)
+        copy(newSlice, *this)
+        *this = newSlice
+    }
     *this = append(*this, edge)
 }
 

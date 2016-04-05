@@ -36,29 +36,30 @@ func (this vertex) GetOutgoingEdges() editableEdgesInterface {
 
 // returns a combination of ingoing an outgoing edges
 func (this vertex) GetNeighbours() VerticesInterface {
-    v := this.GetOutgoingNeighbours().(vertices)
-    for _, n := range this.GetIngoingNeighbours().All() {
-        v.add(n)
+    v := make([]VertexInterface, 0, this.ingoingEdges.Count() + this.outgoingEdges.Count())
+    copy(v, this.GetOutgoingNeighbours().(vertices))
+    for _, edge := range this.ingoingEdges.All() {
+        v = append(v, edge.GetStartVertex())
     }
-    return v
+    return vertices(v)
 }
 
 // returns the ingoing edges
 func (this vertex) GetIngoingNeighbours() VerticesInterface {
-    v := vertices{}
+    v := make([]VertexInterface, 0, this.ingoingEdges.Count())
     for _, edge := range this.ingoingEdges.All() {
-        v.add(edge.GetStartVertex())
+        v = append(v, edge.GetStartVertex())
     }
-    return v
+    return vertices(v)
 }
 
 // returns the outgoing edges
 func (this vertex) GetOutgoingNeighbours() VerticesInterface {
-    v := vertices{}
+    v := make([]VertexInterface, 0, this.outgoingEdges.Count())
     for _, edge := range this.outgoingEdges.All() {
-        v.add(edge.GetEndVertex())
+        v = append(v, edge.GetEndVertex())
     }
-    return v
+    return vertices(v)
 }
 
 // interface for a map of vertices
