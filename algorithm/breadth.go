@@ -4,10 +4,6 @@ import (
     "github.com/teelevision/fhac-mmi/graph"
 )
 
-type Graph struct {
-    graph.GraphInterface
-}
-
 // performs a breadth-first search on the graph and returns a slice of vertices
 func (this Graph) BreadthFirstSearch(start graph.VertexInterface) []graph.VertexInterface {
 
@@ -25,17 +21,9 @@ func (this Graph) BreadthFirstSearch(start graph.VertexInterface) []graph.Vertex
     // go through the result
     for i := 0; i < len(result); i++ {
         vertex := result[i]
-        var neighbours graph.VerticesInterface
-
-        // decide whether to get all or only the outgoing neighbours
-        if this.IsDirected() {
-            neighbours = vertex.GetOutgoingNeighbours()
-        } else {
-            neighbours = vertex.GetNeighbours()
-        }
 
         // add all neighbours that were not discovered yet to the result
-        for _, v := range neighbours.All() {
+        for _, v := range this.getNeighboursOfVertex(vertex).All() {
             if !discovered[v] {
                 discovered[v] = true
                 result = append(result, v)
