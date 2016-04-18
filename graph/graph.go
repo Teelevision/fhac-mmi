@@ -61,10 +61,15 @@ func (this Graph) GetEdges() EdgesInterface {
 
 // creates, adds and returns a new vertex
 func (this *Graph) NewVertex() *vertex {
+    return this.NewVertexWithId(uint(this.edgesIdProvider.NewId()))
+}
+
+// creates, adds and returns a new vertex with given id
+func (this *Graph) NewVertexWithId(i uint) *vertex {
 
     // create with empty map of ingoing and outgoing edges
     vertex := &vertex{
-        id: this.edgesIdProvider.NewId(),
+        id: id(i),
         ingoingEdges: newEdges(10),
         outgoingEdges: newEdges(10),
     }

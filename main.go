@@ -21,6 +21,7 @@ var config struct {
     breadthFirstSearch  *bool
     depthFirstSearch    *bool
     connectedComponents *bool
+    prim                *bool
     startVertex         *int
     showTime            *bool
     cpuProfile          *string
@@ -35,6 +36,7 @@ func initConfig() {
     config.breadthFirstSearch = flag.Bool("breadth", false, "breadth-first search")
     config.depthFirstSearch = flag.Bool("depth", false, "depth-first search")
     config.connectedComponents = flag.Bool("components", false, "connected components")
+    config.prim = flag.Bool("prim", false, "prim spanning tree")
     config.startVertex = flag.Int("start", 0, "start vertex")
     config.showTime = flag.Bool("t", false, "show time")
     config.cpuProfile = flag.String("cpuprofile", "", "write cpu profile to file")
@@ -129,6 +131,12 @@ func main() {
             numD := algorithm.GetNumConnectedComponents(graph, algorithm.DepthFirstSearch)
             fmt.Println("Connected components (via breadth-first search):", numB)
             fmt.Println("Connected components (via depth-first search):", numD)
+        }
+
+        // prim
+        if *config.prim {
+            length, _ := graph.Prim(start)
+            fmt.Println("Length of minimal spanning tree (Prim):", length)
         }
 
         endTime := time.Now()

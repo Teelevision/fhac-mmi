@@ -6,6 +6,7 @@ type EdgeInterface interface {
     idInterface
     GetStartVertex() VertexInterface
     GetEndVertex() VertexInterface
+    GetOtherVertex(VertexInterface) VertexInterface
     GetWeight() float64
     SetWeight(weight float64)
 }
@@ -26,6 +27,14 @@ func (this edge) GetStartVertex() VertexInterface {
 // returns the end vertex
 func (this edge) GetEndVertex() VertexInterface {
     return this.end;
+}
+
+// returns the other vertex that is not the given one
+func (this edge) GetOtherVertex(vertex VertexInterface) VertexInterface {
+    if this.start == vertex {
+        return this.end
+    }
+    return this.start
 }
 
 // returns the weight
