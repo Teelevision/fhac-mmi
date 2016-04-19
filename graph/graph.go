@@ -19,10 +19,14 @@ type Graph struct {
 
 // init a new graph
 func CreateNewGraph(directed bool) *Graph {
-    // contains empty maps of vertices and edges
+    return CreateNewGraphWithNumVerticesAndNumEdges(directed, 10, 10)
+}
+
+// init a new graph with given sizes
+func CreateNewGraphWithNumVerticesAndNumEdges(directed bool, numVertices, numEdges uint) *Graph {
     return &Graph{
-        vertices: vertices{},
-        edges: edges{},
+        vertices: make(vertices, 0, numVertices),
+        edges: make(edges, 0, numEdges),
         verticesIdProvider: idProvider(0),
         edgesIdProvider: idProvider(0),
         directed: directed,

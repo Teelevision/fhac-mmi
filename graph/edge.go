@@ -132,9 +132,7 @@ func (this mergedEdges) Count() (num uint) {
 func (this mergedEdges) All() []EdgeInterface {
     allEdges := make([]EdgeInterface, 0, this.Count())
     for _, edges := range this {
-        for _, edge := range edges.All() {
-            allEdges = append(allEdges, edge)
-        }
+        allEdges = append(allEdges, edges.All()...)
     }
     return allEdges
 }
