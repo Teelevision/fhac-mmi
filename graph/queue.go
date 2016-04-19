@@ -7,7 +7,7 @@ import (
 // interface for a queue that returns the nearest vertices
 type NearestVertexQueueInterface interface {
     PushVertex(VertexInterface, float64, VertexInterface) *NearestVertexQueueItem
-    UpdateVertex(*NearestVertexQueueItem, float64, VertexInterface)
+    UpdatedVertex(*NearestVertexQueueItem)
     PopNearestVertex() (VertexInterface, float64, VertexInterface)
     Len() int
     IsEmpty() bool
@@ -68,10 +68,8 @@ func (this *nearestVertexQueue) PushVertex(vertex VertexInterface, distance floa
     return v
 }
 
-// updates the vertex
-func (this *nearestVertexQueue) UpdateVertex(v *NearestVertexQueueItem, distance float64, nearest VertexInterface) {
-    v.Weight = distance
-    v.From = nearest
+// fix the vertex when updated
+func (this *nearestVertexQueue) UpdatedVertex(v *NearestVertexQueueItem) {
     heap.Fix(this, v.index)
 }
 

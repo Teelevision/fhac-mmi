@@ -5,6 +5,7 @@ package graph
 type VertexInterface interface {
     idInterface
     GetEdges() EdgesInterface
+    GetEdgesFast() [2](func() []EdgeInterface)
     GetIngoingEdges() editableEdgesInterface
     GetOutgoingEdges() editableEdgesInterface
     GetNeighbours() VerticesInterface
@@ -22,6 +23,11 @@ type vertex struct {
 // returns a combination of ingoing an outgoing edges
 func (this vertex) GetEdges() EdgesInterface {
     return &mergedEdges{this.ingoingEdges, this.outgoingEdges}
+}
+
+// returns a combination of ingoing an outgoing edges
+func (this vertex) GetEdgesFast() [2](func() []EdgeInterface) {
+    return [2](func() []EdgeInterface){this.outgoingEdges.All, this.ingoingEdges.All}
 }
 
 // returns the ingoing edges

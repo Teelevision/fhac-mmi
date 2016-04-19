@@ -135,7 +135,7 @@ func main() {
 
         // prim
         if *config.prim {
-            length, _ := graph.Prim(start)
+            length := graph.PrimLength(start)
             fmt.Println("Length of minimal spanning tree (Prim):", length)
         }
 

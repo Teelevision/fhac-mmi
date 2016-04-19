@@ -3,3 +3,5 @@
 coverage.out
 .idea
 /fhac-mmi
+cpu.profile
+cpu.svg

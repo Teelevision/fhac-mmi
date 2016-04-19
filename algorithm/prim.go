@@ -5,35 +5,29 @@ import (
 )
 
 // simple wrapper
-func (this Graph) Prim(start graphLib.VertexInterface) (float64, Graph) {
-    return Prim(this, start)
+func (this Graph) PrimLength(start graphLib.VertexInterface) float64 {
+    return PrimLength(this, start)
 }
 
 // helper struct for the prim algorithm
 type primVertex struct {
     // if the vertex was visited
     visited bool
-    // the corresponding new vertex in the result graph
-    new     graphLib.VertexInterface
     // the item in the queue
     item    *graphLib.NearestVertexQueueItem
 }
 
-func Prim(graph Graph, start graphLib.VertexInterface) (float64, Graph) {
+// prim algorithm with result length
+func PrimLength(graph Graph, start graphLib.VertexInterface) float64 {
 
     // the number of vertices in our graph
     num := graph.GetVertices().Count()
-
-    // initialize result graph with num vertices and num - 1 edges
-    result := graphLib.CreateNewGraphWithNumVerticesAndNumEdges(false, num, num - 1)
 
     // map vertices to primVertex (holds the visited flag, the vertex of the new graph and the queue item)
     vertices := make(map[graphLib.VertexInterface]*primVertex, num)
 
     // initialize with the start vertex
-    vertices[start] = &primVertex{
-        new: result.NewVertexWithId(start.GetId()),
-    }
+    vertices[start] = &primVertex{}
 
     // create queue
     q := graphLib.NewNearestVertexQueue(num)
@@ -42,7 +36,7 @@ func Prim(graph Graph, start graphLib.VertexInterface) (float64, Graph) {
     length := float64(0)
 
     // go through queue
-    for v, d, n := start, float64(0), graphLib.VertexInterface(nil); v != nil; v, d, n = q.PopNearestVertex() {
+    for v, d := start, float64(0); v != nil; v, d, _ = q.PopNearestVertex() {
 
         // add length
         length += d
@@ -52,37 +46,34 @@ func Prim(graph Graph, start graphLib.VertexInterface) (float64, Graph) {
         vv.visited = true
 
         // search all edges (ignore direction of the graph)
-        for _, edge := range v.GetEdges().All() {
+        for _, all := range v.GetEdgesFast() {
+            for _, edge := range all() {
 
-            // get the vertex that is not v
-            neighbourVertex := edge.GetOtherVertex(v)
+                // get the vertex that is not v
+                neighbourVertex := edge.GetOtherVertex(v)
 
-            // get the weight between v nd neighbourVertex
-            weight := edge.GetWeight()
+                // get the weight between v nd neighbourVertex
+                weight := edge.GetWeight()
 
-            // check if we know that vertex already
-            if neighbour, ok := vertices[neighbourVertex]; ok {
-                if !neighbour.visited && neighbour.item.Weight > weight {
-                    // if it is not visited and we discovered a edge with lower weight
-                    q.UpdateVertex(neighbour.item, weight, v)
-                }
-            } else {
-                // undiscovered vertex: add to map
-                vertices[neighbourVertex] = &primVertex{
-                    // add to result graph
-                    new: result.NewVertexWithId(neighbourVertex.GetId()),
-                    // add to queue
-                    item: q.PushVertex(neighbourVertex, weight, v),
+                // check if we know that vertex already
+                if neighbour, ok := vertices[neighbourVertex]; ok {
+                    if !neighbour.visited && neighbour.item.Weight > weight {
+                        // if it is not visited and we discovered a edge with lower weight
+                        neighbour.item.Weight = weight
+                        neighbour.item.From = v
+                        q.UpdatedVertex(neighbour.item)
+                    }
+                } else {
+                    // undiscovered vertex: add to map
+                    vertices[neighbourVertex] = &primVertex{
+                        // add to queue
+                        item: q.PushVertex(neighbourVertex, weight, v),
+                    }
                 }
             }
         }
-
-        // add edge to minimal spanning tree / result graph
-        if n != nil {
-            result.NewWeightedEdge(vertices[n].new, vv.new, d)
-        }
     }
 
-    // return the length/weight of the minimal spanning tree and the resulting graph
-    return length, Graph{result}
+    // return the length/weight of the minimal spanning tree
+    return length
 }
