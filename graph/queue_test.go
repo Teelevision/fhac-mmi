@@ -47,3 +47,46 @@ func TestNearestVertexQueue(t *testing.T) {
     }
 
 }
+
+// tests the cheapest edge
+func TestCheapestEdgeQueue(t *testing.T) {
+
+    // some vertices, the id will be used as distance
+    edges := []*edge{
+        &edge{weight: 0.5},
+        &edge{weight: 0},
+        &edge{weight: 11},
+        &edge{weight: -1.9},
+        &edge{weight: -1},
+        &edge{weight: 9999.9999},
+        &edge{weight: 0},
+        &edge{weight: 11},
+    }
+    l := len(edges)
+
+    // new queue that holds the cheapest edges
+    q := NewCheapestEdgeQueue(uint(l))
+    for _, edge := range edges {
+        q.PushEdge(edge)
+    }
+
+    // recover edges in the right order
+    for _, weight := range []float64{-1.9, -1, 0, 0, 0.5, 11, 11, 9999.9999} {
+        if q.IsEmpty() {
+            t.Error("Queue is empty, but should not.")
+        }
+
+        edge := q.PopCheapestEdge()
+        if w := edge.GetWeight(); w != weight {
+            t.Errorf("Distance should be %f, but is %f.", weight, w)
+        }
+
+        l--
+    }
+
+    // check if all were recovered
+    if l > 0 {
+        t.Error("Queue did not return every edge.")
+    }
+
+}
