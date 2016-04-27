@@ -15,7 +15,7 @@ func BenchmarkPrimLength(b *testing.B) {
     graph := Graph{g}
 
     for n := 0; n < b.N; n++ {
-        length, _ := graph.PrimLength(start)
+        length, _, _ := graph.Prim(start)
         if length != 27450.617104929115 {
             panic("PrimLength() result is wrong")
         }

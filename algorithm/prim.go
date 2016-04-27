@@ -5,12 +5,12 @@ import (
 )
 
 // simple wrapper
-func (this Graph) PrimLength(start graphLib.VertexInterface) (float64, Graph) {
-    return PrimLength(this, start)
+func (this Graph) Prim(start graphLib.VertexInterface) (float64, Graph, map[graphLib.VertexInterface]graphLib.VertexInterface) {
+    return Prim(this, start)
 }
 
 // prim algorithm with result length
-func PrimLength(graph Graph, start graphLib.VertexInterface) (float64, Graph) {
+func Prim(graph Graph, start graphLib.VertexInterface) (float64, Graph, map[graphLib.VertexInterface]graphLib.VertexInterface) {
 
     // the number of vertices in our graph
     num := graph.GetVertices().Count()
@@ -24,8 +24,14 @@ func PrimLength(graph Graph, start graphLib.VertexInterface) (float64, Graph) {
     // keep track of the length of the minimal spanning tree
     length := float64(0)
 
+    // map source to result vertex
+    vMap := make(map[graphLib.VertexInterface]graphLib.VertexInterface, num)
+
     // the result spanning tree
-    result := graphLib.CloneGraphWithoutEdges(graph, num - 1)
+    result := graphLib.CreateNewGraphWithNumVerticesAndNumEdges(false, num, num - 1)
+    for _, v := range graph.GetVertices().All() {
+        vMap[v] = result.NewVertex()
+    }
 
     // go through queue
     for v, d, n := start, float64(0), graphLib.VertexInterface(nil); v != nil; v, d, n = q.PopNearestVertex() {
@@ -34,7 +40,7 @@ func PrimLength(graph Graph, start graphLib.VertexInterface) (float64, Graph) {
             // add length
             length += d
             // add edge
-            result.NewWeightedEdge(n, v, d)
+            result.NewWeightedEdge(vMap[n], vMap[v], d)
         }
 
         // vertex is visited
@@ -72,5 +78,5 @@ func PrimLength(graph Graph, start graphLib.VertexInterface) (float64, Graph) {
     }
 
     // return the length/weight of the minimal spanning tree and the minimal spanning tree itself
-    return length, Graph{result}
+    return length, Graph{result}, vMap
 }

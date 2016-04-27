@@ -32,4 +32,4 @@ func (this Graph) getWeightBetween(v1, v2 graph.VertexInterface) float64 {
 type TraverseFunction func(graph Graph, start graph.VertexInterface) []graph.VertexInterface
 
 // a function that takes a start vertex and then returns the minimal spanning tree
-type MinimalSpanningTreeFunction func(graph Graph, start graph.VertexInterface) (length float64, mst Graph)
+type MinimalSpanningTreeFunction func(graph Graph, start graph.VertexInterface) (length float64, mst Graph, mapping map[graph.VertexInterface]graph.VertexInterface)

@@ -141,7 +141,7 @@ func main() {
 
         // prim
         if *config.prim {
-            length, _ := graph.PrimLength(start)
+            length, _, _ := graph.Prim(start)
             fmt.Println("Length of minimal spanning tree (Prim):", length)
         }
 
@@ -153,12 +153,20 @@ func main() {
 
         // nearest neighbour
         if *config.nearestNeighbour {
-            fmt.Println("Length of Hamilton circle (Nearest Neighbour):", graph.NearestNeighbourHamiltonCircleLength(start))
+            length := graph.NearestNeighbourHamiltonCircleLength(start)
+            fmt.Println("Length of Hamilton circle (Nearest Neighbour):", length)
         }
 
         // double tree
         if *config.doubleTree {
-            fmt.Println("Length of Hamilton circle (Double Tree):", graph.DoubleTreeHamiltonCircleLength(start))
+            {
+                length := graph.DoubleTreeHamiltonCircleLength(algorithm.Prim, algorithm.DepthFirstSearch, start)
+                fmt.Println("Length of Hamilton circle (Double Tree[Prim, depth-first search]):", length)
+            }
+            {
+                length := graph.DoubleTreeHamiltonCircleLength(algorithm.Prim, algorithm.BreadthFirstSearch, start)
+                fmt.Println("Length of Hamilton circle (Double Tree[Prim, breadth-first search]):", length)
+            }
         }
 
         endTime := time.Now()
