@@ -45,11 +45,8 @@ func NearestNeighbourHamiltonCircleLength(graph Graph, start graphLib.VertexInte
     }
 
     // add the return path
-    for _, edge := range vertex.GetEdges().All() {
-        if edge.GetOtherVertex(vertex) == start {
-            // return the length of the hamilton circle
-            return length + edge.GetWeight()
-        }
+    if w := graph.getWeightBetween(vertex, start); w >= 0.0 {
+        return length + w
     }
 
     // if none was found

@@ -110,3 +110,14 @@ func (this *Graph) NewWeightedEdge(start, end VertexInterface, weight float64) E
 
     return edge
 }
+
+// clone the graph without edges
+func CloneGraphWithoutEdges(graph GraphInterface, numEdges uint) *Graph {
+    return &Graph{
+        vertices: vertices(graph.GetVertices().All()),
+        edges: make(edges, 0, numEdges),
+        verticesIdProvider: idProvider(graph.GetVertices().Count()),
+        edgesIdProvider: idProvider(0),
+        directed: graph.IsDirected(),
+    }
+}
