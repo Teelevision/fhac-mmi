@@ -23,6 +23,7 @@ var config struct {
     connectedComponents *bool
     prim                *bool
     kruskal             *bool
+    nearestNeighbour    *bool
     startVertex         *int
     showTime            *bool
     cpuProfile          *string
@@ -39,6 +40,7 @@ func initConfig() {
     config.connectedComponents = flag.Bool("components", false, "connected components")
     config.prim = flag.Bool("prim", false, "prim minimal spanning tree length")
     config.kruskal = flag.Bool("kruskal", false, "kruskal minimal spanning tree length")
+    config.nearestNeighbour = flag.Bool("nn", false, "nearest neighbour hamilton circle length")
     config.startVertex = flag.Int("start", 0, "start vertex")
     config.showTime = flag.Bool("t", false, "show time")
     config.cpuProfile = flag.String("cpuprofile", "", "write cpu profile to file")
@@ -145,6 +147,11 @@ func main() {
         if *config.kruskal {
             length := graph.KruskalLength()
             fmt.Println("Length of minimal spanning tree (Kruskal):", length)
+        }
+
+        // nearest neighbour
+        if *config.nearestNeighbour {
+            fmt.Println("Length of Hamilton circle (Nearest Neighbour):", graph.NearestNeighbourHamiltonCircleLength(start))
         }
 
         endTime := time.Now()
