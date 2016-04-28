@@ -2,6 +2,7 @@ package algorithm
 
 import (
     graphLib "github.com/teelevision/fhac-mmi/graph"
+    "gopkg.in/cheggaaa/pb.v1"
 )
 
 // simple wrapper
@@ -64,9 +65,11 @@ func foobar(dm distanceMap, front graphLib.VertexInterface, rest []graphLib.Vert
     }
 
     // when not changing the order
-    first := rest[0]
     last, l := foobar(dm, rest[0], rest[1:])
     l += dm.dist(front, rest[0])
+    if front == nil {
+        l += dm.dist(rest[0], last)
+    }
 
     // combinations of changing the order
     for i := 1; i < len(rest); i++ {
@@ -77,16 +80,16 @@ func foobar(dm distanceMap, front graphLib.VertexInterface, rest []graphLib.Vert
         // recursion
         la, l2 := foobar(dm, rest[0], rest[1:])
         l2 += dm.dist(front, rest[0])
+        if front == nil {
+            l2 += dm.dist(rest[0], la)
+        }
         if l2 < l {
-            last, l, first = la, l2, rest[0]
+            last, l = la, l2
         }
 
         // change back
         rest[0], rest[i] = rest[i], rest[0]
     }
 
-    if front == nil {
-        l += dm.dist(first, last)
-    }
     return last, l
 }
