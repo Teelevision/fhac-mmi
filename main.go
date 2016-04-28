@@ -25,6 +25,7 @@ var config struct {
     kruskal             *bool
     nearestNeighbour    *bool
     doubleTree          *bool
+    travelingSalesmanBF *bool
     startVertex         *int
     showTime            *bool
     cpuProfile          *string
@@ -43,6 +44,7 @@ func initConfig() {
     config.kruskal = flag.Bool("kruskal", false, "kruskal minimal spanning tree length")
     config.nearestNeighbour = flag.Bool("nn", false, "nearest neighbour hamilton circle length")
     config.doubleTree = flag.Bool("dt", false, "double tree hamilton circle length")
+    config.travelingSalesmanBF = flag.Bool("tsbf", false, "traveling salesman brute force")
     config.startVertex = flag.Int("start", 0, "start vertex")
     config.showTime = flag.Bool("t", false, "show time")
     config.cpuProfile = flag.String("cpuprofile", "", "write cpu profile to file")
@@ -167,6 +169,12 @@ func main() {
                 length := graph.DoubleTreeHamiltonCircleLength(algorithm.Prim, algorithm.BreadthFirstSearch, start)
                 fmt.Println("Length of Hamilton circle (Double Tree[Prim, breadth-first search]):", length)
             }
+        }
+
+        // traveling salesman brute force
+        if *config.travelingSalesmanBF {
+            length := graph.TravelingSalesmanBruteForce()
+            fmt.Println("Length of shortest Hamilton circle (brute force):", length)
         }
 
         endTime := time.Now()
