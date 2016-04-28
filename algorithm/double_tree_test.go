@@ -15,8 +15,8 @@ func BenchmarkDoubleTreeHamiltonCircleLength(b *testing.B) {
     start := graph.GetVertices().Get(0)
 
     for n := 0; n < b.N; n++ {
-        length := graph.DoubleTreeHamiltonCircleLength(start)
-        if length != 527.1999999999998 {
+        length := graph.DoubleTreeHamiltonCircleLength(Prim, DepthFirstSearch, start)
+        if length != 385.44999999999993 {
             panic("DoubleTreeHamiltonCircleLength() result is wrong")
         }
     }

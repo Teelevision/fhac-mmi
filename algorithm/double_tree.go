@@ -34,5 +34,8 @@ func DoubleTreeHamiltonCircleLength(graph Graph, mst MinimalSpanningTreeFunction
         }
     }
 
+    // return to start
+    length += graph.getWeightBetween(mapping[result[0]], mapping[result[len(result)-1]])
+
     return length
 }
