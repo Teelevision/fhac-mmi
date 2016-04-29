@@ -161,14 +161,12 @@ func main() {
 
         // double tree
         if *config.doubleTree {
-            {
-                length := graph.DoubleTreeHamiltonCircleLength(algorithm.Prim, algorithm.DepthFirstSearch, start)
-                fmt.Println("Length of Hamilton circle (Double Tree[Prim, depth-first search]):", length)
+            tour, length := graph.DoubleTreeHamiltonCircle(algorithm.Prim, start)
+            fmt.Print("Length of Hamilton circle (Double Tree[Prim]): ", length, " [")
+            for _, v := range tour {
+                fmt.Print(" ", v.GetId())
             }
-            {
-                length := graph.DoubleTreeHamiltonCircleLength(algorithm.Prim, algorithm.BreadthFirstSearch, start)
-                fmt.Println("Length of Hamilton circle (Double Tree[Prim, breadth-first search]):", length)
-            }
+            fmt.Println(" ]")
         }
 
         // traveling salesman brute force

@@ -5,18 +5,18 @@ import (
 )
 
 // simple wrapper
-func (this Graph) DoubleTreeHamiltonCircleLength(mst MinimalSpanningTreeFunction, traverse TraverseFunction, start graphLib.VertexInterface) float64 {
-    return DoubleTreeHamiltonCircleLength(this, mst, traverse, start)
+func (this Graph) DoubleTreeHamiltonCircle(mst MinimalSpanningTreeFunction, start graphLib.VertexInterface) ([]graphLib.VertexInterface, float64) {
+    return DoubleTreeHamiltonCircle(this, mst, start)
 }
 
 // returns the length of the hamilton circle calculated by the double tree algorithm
-func DoubleTreeHamiltonCircleLength(graph Graph, mst MinimalSpanningTreeFunction, traverse TraverseFunction, start graphLib.VertexInterface) float64 {
+func DoubleTreeHamiltonCircle(graph Graph, mst MinimalSpanningTreeFunction, start graphLib.VertexInterface) ([]graphLib.VertexInterface, float64) {
 
     // get the minimal spanning tree
     _, mstGraph, vMap := mst(graph, start)
 
     // traverse
-    result := traverse(mstGraph, mstGraph.GetVertices().Get(0))
+    result := DepthFirstSearch(mstGraph, mstGraph.GetVertices().Get(0))
 
     // reverse mapping
     mapping := make(map[graphLib.VertexInterface]graphLib.VertexInterface, len(vMap))
@@ -37,5 +37,5 @@ func DoubleTreeHamiltonCircleLength(graph Graph, mst MinimalSpanningTreeFunction
     // return to start
     length += graph.getWeightBetween(mapping[result[0]], mapping[result[len(result)-1]])
 
-    return length
+    return result, length
 }

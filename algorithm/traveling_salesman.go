@@ -10,54 +10,67 @@ func (this Graph) TravelingSalesmanBruteForce() float64 {
     return TravelingSalesmanBruteForce(this)
 }
 
-type distanceMap map[graphLib.VertexInterface]map[graphLib.VertexInterface]float64
+// returns the length of the shortest hamilton circle by brute force
+func TravelingSalesmanBruteForce(graph Graph) float64 {
 
-func (this distanceMap) dist(v1, v2 graphLib.VertexInterface) float64 {
+    // get the number of vertices
+    num := graph.GetVertices().Count()
+    if num == 0 {
+        return 0
+    }
+
+    // copy slice of vertices, because we are going to write to it
+    vertices := make([]graphLib.VertexInterface, num)
+    copy(vertices, graph.GetVertices().All())
+
+    // make distance map that contains every distance between every two vertices
+    numEdges := graph.GetEdges().Count()
+    dm := make(travelingSalesmanBruteForceDistanceMap, numEdges)
+    for _, v := range vertices {
+        dm[v] = make(map[graphLib.VertexInterface]float64, numEdges)
+    }
+
+    // fill distance map
+    for _, e := range graph.GetEdges().All() {
+        v1, v2, w := e.GetStartVertex(), e.GetEndVertex(), e.GetWeight()
+        dm[v1][v2], dm[v2][v1] = w, w
+    }
+
+    // progress bar
+    depth := int(num) / 2;
+    p := pb.StartNew(travelingSalesmanBruteForceHelperCalls(int(num), depth))
+
+    // perform brute force
+    _, length := travelingSalesmanBruteForceHelper(depth, p, dm, nil, vertices)
+
+    // print that we are done
+    p.FinishPrint("Done.")
+
+    // returns the length of the shortest hamilton circle
+    return length
+}
+
+// distance map used by the traveling salesman brute force algorithm
+type travelingSalesmanBruteForceDistanceMap map[graphLib.VertexInterface]map[graphLib.VertexInterface]float64
+
+// distance between two vertices or 0 if the first is nil
+func (this travelingSalesmanBruteForceDistanceMap) dist(v1, v2 graphLib.VertexInterface) float64 {
     if v1 == nil {
         return 0
     }
     return this[v1][v2]
 }
 
-// returns the length of the shortest hamilton circle by brute force
-func TravelingSalesmanBruteForce(graph Graph) float64 {
-
-    num := graph.GetVertices().Count()
-    if num == 0 {
+// calculates the number of helper function calls until the given depths
+func travelingSalesmanBruteForceHelperCalls(n, depth int) int {
+    if n == depth {
         return 0
     }
-
-    vertices := make([]graphLib.VertexInterface, num)
-    copy(vertices, graph.GetVertices().All())
-
-    // make distance map
-    numEdges := graph.GetEdges().Count()
-    dm := make(distanceMap, numEdges)
-    for _, v := range vertices {
-        dm[v] = make(map[graphLib.VertexInterface]float64, numEdges)
-    }
-    for _, e := range graph.GetEdges().All() {
-        v1, v2, w := e.GetStartVertex(), e.GetEndVertex(), e.GetWeight()
-        dm[v1][v2], dm[v2][v1] = w, w
-    }
-
-    _, length := foobar(dm, nil, vertices)
-
-    return length
+    return 1 + n * travelingSalesmanBruteForceHelperCalls(n - 1, depth)
 }
 
-func foobar(dm distanceMap, front graphLib.VertexInterface, rest []graphLib.VertexInterface) (graphLib.VertexInterface, float64) {
-
-    /*if len(rest) > 8 && front != nil {
-        for i := 10 - len(rest); i > 0; i-- {
-            fmt.Print(".")
-        }
-        fmt.Print(front.GetId())
-        for _, r := range rest {
-            fmt.Print(r.GetId())
-        }
-        fmt.Println()
-    }*/
+// performs brute force to find the length of the shortest hamilton circle
+func travelingSalesmanBruteForceHelper(depth int, p *pb.ProgressBar, dm travelingSalesmanBruteForceDistanceMap, front graphLib.VertexInterface, rest []graphLib.VertexInterface) (graphLib.VertexInterface, float64) {
 
     // last element
     if len(rest) == 1 {
@@ -65,10 +78,10 @@ func foobar(dm distanceMap, front graphLib.VertexInterface, rest []graphLib.Vert
     }
 
     // when not changing the order
-    last, l := foobar(dm, rest[0], rest[1:])
-    l += dm.dist(front, rest[0])
+    lastVertex, length := travelingSalesmanBruteForceHelper(depth - 1, p, dm, rest[0], rest[1:])
+    length += dm.dist(front, rest[0])
     if front == nil {
-        l += dm.dist(rest[0], last)
+        length += dm.dist(rest[0], lastVertex)
     }
 
     // combinations of changing the order
@@ -78,18 +91,23 @@ func foobar(dm distanceMap, front graphLib.VertexInterface, rest []graphLib.Vert
         rest[0], rest[i] = rest[i], rest[0]
 
         // recursion
-        la, l2 := foobar(dm, rest[0], rest[1:])
-        l2 += dm.dist(front, rest[0])
+        lastVertexCandidat, lengthCandidat := travelingSalesmanBruteForceHelper(depth - 1, p, dm, rest[0], rest[1:])
+        lengthCandidat += dm.dist(front, rest[0])
         if front == nil {
-            l2 += dm.dist(rest[0], la)
+            lengthCandidat += dm.dist(rest[0], lastVertexCandidat)
         }
-        if l2 < l {
-            last, l = la, l2
+        if lengthCandidat < length {
+            lastVertex, length = lastVertexCandidat, lengthCandidat
         }
 
         // change back
         rest[0], rest[i] = rest[i], rest[0]
     }
 
-    return last, l
+    // progress bar
+    if depth > 0 {
+        p.Increment()
+    }
+
+    return lastVertex, length
 }
