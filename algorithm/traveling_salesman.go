@@ -13,10 +13,11 @@ func (this Graph) TravelingSalesmanBruteForce() float64 {
 // returns the length of the shortest hamilton circle by brute force
 func TravelingSalesmanBruteForce(graph Graph) float64 {
 
+    // wrapper type for vertices
     type vertex struct {
         graphLib.VertexInterface
         index     int
-        distances []float64
+        distances [15]float64 // distances to other vertices, by index
     }
 
     // get the number of vertices
@@ -32,9 +33,10 @@ func TravelingSalesmanBruteForce(graph Graph) float64 {
         vertices[i] = &vertex{
             VertexInterface: v,
             index: i,
-            distances: make([]float64, num),
+            //distances: make([]float64, num),
         }
 
+        // for all previous vertices, add distance
         for i2, v2 := range vertices[:i] {
             w := graph.getWeightBetween(v, v2.VertexInterface)
             vertices[i].distances[i2] = w
@@ -45,7 +47,7 @@ func TravelingSalesmanBruteForce(graph Graph) float64 {
 
     // progress bar
     depth := int(num) / 2;
-    p := pb.StartNew(travelingSalesmanBruteForceHelperCalls(int(num), depth))
+    p := pb.StartNew(travelingSalesmanBruteForceHelperCalls(int(num), int(num) - depth))
 
     // performs brute force to find the length of the shortest hamilton circle
     var helper func(int, *pb.ProgressBar, *vertex, []*vertex) (*vertex, float64)
