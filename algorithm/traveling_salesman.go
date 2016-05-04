@@ -52,29 +52,30 @@ func TravelingSalesmanBruteForce(graph Graph) float64 {
     // performs brute force to find the length of the shortest hamilton circle
     var helper func(int, *pb.ProgressBar, *vertex, []*vertex) (*vertex, float64)
     helper = func(depth int, p *pb.ProgressBar, front *vertex, rest []*vertex) (*vertex, float64) {
+        rest0 := rest[0]
+        rest1 := rest[1:]
 
         // last element
         if len(rest) == 1 {
-            return rest[0], front.distances[rest[0].index]
+            return rest0, front.distances[rest0.index]
         }
 
         // when not changing the order
-        lastVertex, length := helper(depth - 1, p, rest[0], rest[1:])
+        lastVertex, length := helper(depth - 1, p, rest0, rest1)
         if front != nil {
-            length += front.distances[rest[0].index]
+            length += front.distances[rest0.index]
         } else {
-            length += rest[0].distances[lastVertex.index]
+            length += rest0.distances[lastVertex.index]
         }
 
         // combinations of changing the order
-        rest0 := rest[0]
-        for i, resti := range rest[1:] {
+        for i, resti := range rest1 {
 
             // change order
             rest0, rest[i] = resti, rest0
 
             // recursion
-            lastVertexCandidat, lengthCandidat := helper(depth - 1, p, rest0, rest[1:])
+            lastVertexCandidat, lengthCandidat := helper(depth - 1, p, rest0, rest1)
             if front != nil {
                 lengthCandidat += front.distances[rest0.index]
             } else {
