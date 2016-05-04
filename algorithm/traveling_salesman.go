@@ -65,24 +65,25 @@ func TravelingSalesmanBruteForce(graph Graph) float64 {
         }
 
         // combinations of changing the order
-        for i := 1; i < len(rest); i++ {
+        rest0 := rest[0]
+        for i, resti := range rest[1:] {
 
             // change order
-            rest[0], rest[i] = rest[i], rest[0]
+            rest0, rest[i] = resti, rest0
 
             // recursion
-            lastVertexCandidat, lengthCandidat := helper(depth - 1, p, rest[0], rest[1:])
+            lastVertexCandidat, lengthCandidat := helper(depth - 1, p, rest0, rest[1:])
             if front != nil {
-                lengthCandidat += front.distances[rest[0].index]
+                lengthCandidat += front.distances[rest0.index]
             } else {
-                lengthCandidat += rest[0].distances[lastVertexCandidat.index]
+                lengthCandidat += rest0.distances[lastVertexCandidat.index]
             }
             if lengthCandidat < length {
                 lastVertex, length = lastVertexCandidat, lengthCandidat
             }
 
             // change back
-            rest[0], rest[i] = rest[i], rest[0]
+            rest0, rest[i] = rest[i], rest0
         }
 
         // progress bar
