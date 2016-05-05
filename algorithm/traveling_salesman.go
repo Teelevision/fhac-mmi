@@ -12,16 +12,16 @@ func (this Graph) TravelingSalesmanBruteForce() float64 {
 // returns the length of the shortest hamilton circle by brute force
 func TravelingSalesmanBruteForce(graph Graph) float64 {
 
-    type vertex struct {
-        graphLib.VertexInterface
-        index     int
-        distances [15]float64
-    }
-
     // get the number of vertices
     num := graph.GetVertices().Count()
     if num <= 1 || num > 15 {
         return 0
+    }
+
+    type vertex struct {
+        graphLib.VertexInterface
+        index     int
+        distances [15]float64
     }
 
     // create vertices
@@ -41,45 +41,49 @@ func TravelingSalesmanBruteForce(graph Graph) float64 {
 
     }
 
-    // performs brute force to find the length of the shortest hamilton circle
-    var helper func(int, *vertex, []*vertex) float64
-    helper = func(veryFrontIndex int, front *vertex, rest []*vertex) float64 {
+    // start
+    start := vertices[0]
+    startIndex := start.index
 
-        rest0 := rest[0]
+    // performs brute force to find the length of the shortest hamilton circle
+    var helper func(*vertex, []*vertex) float64
+    helper = func(front *vertex, rest []*vertex) float64 {
+
+        rest0, rest0b := rest[0], (*vertex)(nil)
+        restFrom1 := rest[1:]
 
         // last element
         if len(rest) == 1 {
-            return front.distances[rest0.index] + rest0.distances[veryFrontIndex]
+            return front.distances[rest0.index] + rest0.distances[startIndex]
         }
 
         // when not changing the order
-        length := helper(veryFrontIndex, rest0, rest[1:])
+        length := helper(rest0, restFrom1)
         length += front.distances[rest0.index]
 
         // combinations of changing the order
         for i := 1; i < len(rest); i++ {
 
             // change order
-            rest0, rest[i] = rest[i], rest0
+            rest0b, rest[i] = rest[i], rest0
 
             // recursion
-            lengthCandidat := helper(veryFrontIndex, rest0, rest[1:])
-            lengthCandidat += front.distances[rest0.index]
+            lengthCandidate := helper(rest0b, restFrom1)
+            lengthCandidate += front.distances[rest0b.index]
 
-            if lengthCandidat < length {
-                length = lengthCandidat
+            if lengthCandidate < length {
+                length = lengthCandidate
             }
 
             // change back
-            rest0, rest[i] = rest[i], rest0
+            rest[i] = rest0b
         }
 
         return length
     }
 
     // perform brute force
-    start := vertices[0]
-    length := helper(start.index, start, vertices[1:])
+    length := helper(start, vertices[1:])
 
     // returns the length of the shortest hamilton circle
     return length
