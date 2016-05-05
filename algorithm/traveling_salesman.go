@@ -2,6 +2,7 @@ package algorithm
 
 import (
     graphLib "github.com/teelevision/fhac-mmi/graph"
+    "math"
 )
 
 // simple wrapper
@@ -13,7 +14,7 @@ func (this Graph) TravelingSalesmanBruteForce() float64 {
 func TravelingSalesmanBruteForce(graph Graph) float64 {
 
     // get the number of vertices
-    num := graph.GetVertices().Count()
+    num := int(graph.GetVertices().Count())
     if num <= 1 || num > 15 {
         return 0
     }
@@ -42,48 +43,44 @@ func TravelingSalesmanBruteForce(graph Graph) float64 {
     }
 
     // start
-    start := vertices[0]
-    startIndex := start.index
+    startIndex := 0
 
     // performs brute force to find the length of the shortest hamilton circle
-    var helper func(*vertex, []*vertex) float64
-    helper = func(front *vertex, rest []*vertex) float64 {
+    var helper func(*vertex, int, float64)
+    length := math.MaxFloat64
+    helper = func(front *vertex, n int, currentLength float64) {
 
-        rest0, rest0b := rest[0], (*vertex)(nil)
-        restFrom1 := rest[1:]
+        n1 := n+1
+        rest0, rest0b := vertices[n], (*vertex)(nil)
 
         // last element
-        if len(rest) == 1 {
-            return front.distances[rest0.index] + rest0.distances[startIndex]
+        if num == n1 {
+            l := currentLength + front.distances[rest0.index] + rest0.distances[startIndex]
+            if l < length {
+                length = l
+            }
+            return
         }
 
         // when not changing the order
-        length := helper(rest0, restFrom1)
-        length += front.distances[rest0.index]
+        helper(rest0, n1, currentLength + front.distances[rest0.index])
 
         // combinations of changing the order
-        for i := 1; i < len(rest); i++ {
+        for i := n1; i < num; i++ {
 
             // change order
-            rest0b, rest[i] = rest[i], rest0
+            rest0b, vertices[i] = vertices[i], rest0
 
             // recursion
-            lengthCandidate := helper(rest0b, restFrom1)
-            lengthCandidate += front.distances[rest0b.index]
-
-            if lengthCandidate < length {
-                length = lengthCandidate
-            }
+            helper(rest0b, n1, currentLength + front.distances[rest0b.index])
 
             // change back
-            rest[i] = rest0b
+            vertices[i] = rest0b
         }
-
-        return length
     }
 
     // perform brute force
-    length := helper(start, vertices[1:])
+    helper(vertices[0], 1, 0.0)
 
     // returns the length of the shortest hamilton circle
     return length
