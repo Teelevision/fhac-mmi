@@ -3,6 +3,7 @@ package algorithm
 import (
     graphLib "github.com/teelevision/fhac-mmi/graph"
     "gopkg.in/cheggaaa/pb.v1"
+    "time"
 )
 
 // simple wrapper
@@ -12,6 +13,8 @@ func (this Graph) TravelingSalesmanBruteForce() float64 {
 
 // returns the length of the shortest hamilton circle by brute force
 func TravelingSalesmanBruteForce(graph Graph) float64 {
+
+    startTime := time.Now()
 
     type vertex struct {
         graphLib.VertexInterface
@@ -60,53 +63,66 @@ func TravelingSalesmanBruteForce(graph Graph) float64 {
     }
 
     // progress bar
-    p := pb.StartNew(calls)
+    var p *pb.ProgressBar
+    pf := 0
 
     // performs brute force to find the length of the shortest hamilton circle
-    var helper func(int, *pb.ProgressBar, int, *vertex, []*vertex) (float64)
-    helper = func(depth int, p *pb.ProgressBar, veryFrontIndex int, front *vertex, rest []*vertex) (float64) {
+    var helper func(int, int, *vertex, []*vertex) (float64)
+    helper = func(depth int, veryFrontIndex int, front *vertex, rest []*vertex) (float64) {
+
+        rest0 := rest[0]
 
         // last element
         if len(rest) == 1 {
-            return front.distances[rest[0].index] + rest[0].distances[veryFrontIndex]
+            return front.distances[rest0.index] + rest0.distances[veryFrontIndex]
         }
 
         // when not changing the order
-        length := helper(depth - 1, p, veryFrontIndex, rest[0], rest[1:])
-        length += front.distances[rest[0].index]
+        length := helper(depth - 1, veryFrontIndex, rest0, rest[1:])
+        length += front.distances[rest0.index]
 
 
         // combinations of changing the order
         for i := 1; i < len(rest); i++ {
 
             // change order
-            rest[0], rest[i] = rest[i], rest[0]
+            rest0, rest[i] = rest[i], rest0
 
             // recursion
-            lengthCandidat := helper(depth - 1, p, veryFrontIndex, rest[0], rest[1:])
-            lengthCandidat += front.distances[rest[0].index]
+            lengthCandidat := helper(depth - 1, veryFrontIndex, rest0, rest[1:])
+            lengthCandidat += front.distances[rest0.index]
 
             if lengthCandidat < length {
                 length = lengthCandidat
             }
 
             // change back
-            rest[0], rest[i] = rest[i], rest[0]
+            rest0, rest[i] = rest[i], rest0
         }
 
         // progress bar
         if depth > 0 {
-            p.Increment()
+            t := time.Now().Sub(startTime).Seconds()
+            if t < 5.0 {
+                pf++
+            } else if p == nil {
+                p = pb.StartNew(calls)
+                p.Add(pf)
+            } else {
+                p.Increment()
+            }
         }
 
         return length
     }
 
     // perform brute force
-    length := helper(depth, p, vertices[0].index, vertices[0], vertices[1:])
+    length := helper(depth, vertices[0].index, vertices[0], vertices[1:])
 
     // print that we are done
-    p.FinishPrint("Done.")
+    if p != nil {
+        p.FinishPrint("Done.")
+    }
 
     // returns the length of the shortest hamilton circle
     return length
