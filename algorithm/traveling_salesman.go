@@ -26,7 +26,7 @@ func TravelingSalesmanBruteForce(graph Graph) float64 {
     }
 
     // create vertices
-    vertices := make([]*vertex, num)
+    var vertices [15]*vertex
     for i, v := range graph.GetVertices().All() {
 
         vertices[i] = &vertex{
@@ -43,19 +43,18 @@ func TravelingSalesmanBruteForce(graph Graph) float64 {
     }
 
     // start
-    startIndex := 0
+    startDist := vertices[0].distances
 
     // performs brute force to find the length of the shortest hamilton circle
     var helper func(*vertex, int, float64)
     length := math.MaxFloat64
     helper = func(front *vertex, n int, currentLength float64) {
 
-        n1 := n+1
-        rest0, rest0b := vertices[n], (*vertex)(nil)
+        n1, rest0, rest0b, frontDist := n+1, vertices[n], (*vertex)(nil), &front.distances
 
         // last element
         if num == n1 {
-            l := currentLength + front.distances[rest0.index] + rest0.distances[startIndex]
+            l := currentLength + frontDist[rest0.index] + startDist[rest0.index]
             if l < length {
                 length = l
             }
@@ -63,7 +62,7 @@ func TravelingSalesmanBruteForce(graph Graph) float64 {
         }
 
         // when not changing the order
-        helper(rest0, n1, currentLength + front.distances[rest0.index])
+        helper(rest0, n1, currentLength + frontDist[rest0.index])
 
         // combinations of changing the order
         for i := n1; i < num; i++ {
@@ -72,7 +71,7 @@ func TravelingSalesmanBruteForce(graph Graph) float64 {
             rest0b, vertices[i] = vertices[i], rest0
 
             // recursion
-            helper(rest0b, n1, currentLength + front.distances[rest0b.index])
+            helper(rest0b, n1, currentLength + frontDist[rest0b.index])
 
             // change back
             vertices[i] = rest0b
