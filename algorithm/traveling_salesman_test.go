@@ -5,9 +5,9 @@ import (
     "github.com/teelevision/fhac-mmi/parser"
 )
 
-func BenchmarkTravelingSalesmanBruteForce(b *testing.B) {
+func TravelingSalesmanBruteForceBenchmark(b *testing.B, file string, result float64) {
 
-    g, err := parser.ParseEdgesFile("test/K_10e.txt", true)
+    g, err := parser.ParseEdgesFile(file, true)
     if err != nil {
         panic(err)
     }
@@ -15,9 +15,25 @@ func BenchmarkTravelingSalesmanBruteForce(b *testing.B) {
 
     for n := 0; n < b.N; n++ {
         length := graph.TravelingSalesmanBruteForce()
-        if length != 27.259999999999994 {
+        if length != result {
             panic("TravelingSalesmanBruteForce() result is wrong")
         }
     }
 
+}
+
+func BenchmarkTravelingSalesmanBruteForce10(b *testing.B) {
+    TravelingSalesmanBruteForceBenchmark(b, "test/K_10.txt", 38.41)
+}
+
+func BenchmarkTravelingSalesmanBruteForce10e(b *testing.B) {
+    TravelingSalesmanBruteForceBenchmark(b, "test/K_10e.txt", 27.259999999999994)
+}
+
+func BenchmarkTravelingSalesmanBruteForce12(b *testing.B) {
+    TravelingSalesmanBruteForceBenchmark(b, "test/K_12.txt", 45.19)
+}
+
+func BenchmarkTravelingSalesmanBruteForce12e(b *testing.B) {
+    TravelingSalesmanBruteForceBenchmark(b, "test/K_12e.txt", 36.129999999999995)
 }

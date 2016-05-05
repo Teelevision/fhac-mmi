@@ -20,7 +20,7 @@ func TravelingSalesmanBruteForce(graph Graph) float64 {
 
     // get the number of vertices
     num := graph.GetVertices().Count()
-    if num == 0 {
+    if num <= 1 || num > 15 {
         return 0
     }
 
