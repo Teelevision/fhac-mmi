@@ -43,26 +43,38 @@ func TravelingSalesmanBruteForce(graph Graph) float64 {
 
     }
 
-    // progress bar
+    var fakDepth func(int, int) int
+    fakDepth = func(n, depth int) int {
+        if n == depth {
+            return 1
+        }
+        return n * fakDepth(n - 1, depth)
+    }
+
     depth := int(num) / 2;
-    p := pb.StartNew(travelingSalesmanBruteForceHelperCalls(int(num), depth))
+    num1 := int(num) - 1
+
+    calls := 0
+    for d := num1; d >= depth; d-- {
+        calls += fakDepth(num1, d)
+    }
+
+    // progress bar
+    p := pb.StartNew(calls)
 
     // performs brute force to find the length of the shortest hamilton circle
-    var helper func(int, *pb.ProgressBar, *vertex, []*vertex) (*vertex, float64)
-    helper = func(depth int, p *pb.ProgressBar, front *vertex, rest []*vertex) (*vertex, float64) {
+    var helper func(int, *pb.ProgressBar, int, *vertex, []*vertex) (float64)
+    helper = func(depth int, p *pb.ProgressBar, veryFrontIndex int, front *vertex, rest []*vertex) (float64) {
 
         // last element
         if len(rest) == 1 {
-            return rest[0], front.distances[rest[0].index]
+            return front.distances[rest[0].index] + rest[0].distances[veryFrontIndex]
         }
 
         // when not changing the order
-        lastVertex, length := helper(depth - 1, p, rest[0], rest[1:])
-        if front != nil {
-            length += front.distances[rest[0].index]
-        } else {
-            length += rest[0].distances[lastVertex.index]
-        }
+        length := helper(depth - 1, p, veryFrontIndex, rest[0], rest[1:])
+        length += front.distances[rest[0].index]
+
 
         // combinations of changing the order
         for i := 1; i < len(rest); i++ {
@@ -71,14 +83,11 @@ func TravelingSalesmanBruteForce(graph Graph) float64 {
             rest[0], rest[i] = rest[i], rest[0]
 
             // recursion
-            lastVertexCandidat, lengthCandidat := helper(depth - 1, p, rest[0], rest[1:])
-            if front != nil {
-                lengthCandidat += front.distances[rest[0].index]
-            } else {
-                lengthCandidat += rest[0].distances[lastVertexCandidat.index]
-            }
+            lengthCandidat := helper(depth - 1, p, veryFrontIndex, rest[0], rest[1:])
+            lengthCandidat += front.distances[rest[0].index]
+
             if lengthCandidat < length {
-                lastVertex, length = lastVertexCandidat, lengthCandidat
+                length = lengthCandidat
             }
 
             // change back
@@ -90,23 +99,15 @@ func TravelingSalesmanBruteForce(graph Graph) float64 {
             p.Increment()
         }
 
-        return lastVertex, length
+        return length
     }
 
     // perform brute force
-    _, length := helper(depth, p, nil, vertices)
+    length := helper(depth, p, vertices[0].index, vertices[0], vertices[1:])
 
     // print that we are done
     p.FinishPrint("Done.")
 
     // returns the length of the shortest hamilton circle
     return length
-}
-
-// calculates the number of helper function calls until the given depths
-func travelingSalesmanBruteForceHelperCalls(n, depth int) int {
-    if n == depth {
-        return 0
-    }
-    return 1 + n * travelingSalesmanBruteForceHelperCalls(n - 1, depth)
 }
