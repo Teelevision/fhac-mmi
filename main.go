@@ -10,6 +10,7 @@ import (
     "github.com/teelevision/fhac-mmi/graph"
     "os"
     "runtime/pprof"
+    "runtime"
 )
 
 var config struct {
@@ -83,6 +84,7 @@ func main() {
         if err != nil {
             panic(err)
         }
+        runtime.SetCPUProfileRate(500)
         pprof.StartCPUProfile(f)
         defer pprof.StopCPUProfile()
     }
