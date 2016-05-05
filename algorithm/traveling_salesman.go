@@ -18,7 +18,6 @@ func TravelingSalesmanBruteForce(graph Graph) float64 {
     if num <= 1 || num > 15 {
         return 0
     }
-    num1 := num - 1
 
     type vertex struct {
         graphLib.VertexInterface
@@ -47,13 +46,13 @@ func TravelingSalesmanBruteForce(graph Graph) float64 {
     startDist := vertices[0].distances
 
     // performs brute force to find the length of the shortest hamilton circle
-    type helperFunc func(*vertex, float64)
+    type helperFunc func(int, *vertex, float64)
     var helpers [15]helperFunc
     length := math.MaxFloat64
 
     // end helper
-    helpers[num - 1] = func(front *vertex, currentLength float64) {
-        rest0index := vertices[num1].index
+    helpers[num - 1] = func(n int, front *vertex, currentLength float64) {
+        rest0index := vertices[n].index
         l := currentLength + front.distances[rest0index] + startDist[rest0index]
         if l < length {
             length = l
@@ -62,32 +61,32 @@ func TravelingSalesmanBruteForce(graph Graph) float64 {
 
     // front to pre-end helpers
     for i := num - 2; i >= 0; i-- {
-        helpers[i] = func(nextHelper helperFunc, n int) helperFunc {
-            return func(front *vertex, currentLength float64) {
+        helpers[i] = func(n int, front *vertex, currentLength float64) {
 
-                rest0, rest0b, frontDist := vertices[n], (*vertex)(nil), &front.distances
+            n1, rest0, rest0b, frontDist := n + 1, vertices[n], (*vertex)(nil), &front.distances
+            next := helpers[n1]
 
-                // when not changing the order
-                nextHelper(rest0, currentLength + frontDist[rest0.index])
+            // when not changing the order
+            next(n1, rest0, currentLength + frontDist[rest0.index])
 
-                // combinations of changing the order
-                for i := n + 1; i < num; i++ {
+            // combinations of changing the order
+            for i := n1; i < num; i++ {
 
-                    // change order
-                    rest0b, vertices[i] = vertices[i], rest0
+                // change order
+                rest0b, vertices[i] = vertices[i], rest0
 
-                    // recursion
-                    nextHelper(rest0b, currentLength + frontDist[rest0b.index])
+                // recursion
+                next(n1, rest0b, currentLength + frontDist[rest0b.index])
 
-                    // change back
-                    vertices[i] = rest0b
-                }
+                // change back
+                vertices[i] = rest0b
             }
-        }(helpers[i + 1], i + 1)
+        }
+
     }
 
     // perform brute force
-    helpers[0](vertices[0], 0.0)
+    helpers[0](1, vertices[0], 0.0)
 
     // returns the length of the shortest hamilton circle
     return length
