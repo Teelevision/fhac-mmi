@@ -3,6 +3,7 @@ package algorithm
 import (
     graphLib "github.com/teelevision/fhac-mmi/graph"
     "gopkg.in/cheggaaa/pb.v1"
+    "math"
 )
 
 // simple wrapper
@@ -21,7 +22,7 @@ func TravelingSalesmanBruteForce(graph Graph) float64 {
     }
 
     // get the number of vertices
-    num := graph.GetVertices().Count()
+    num := int(graph.GetVertices().Count())
     if num == 0 {
         return 0
     }
@@ -45,9 +46,63 @@ func TravelingSalesmanBruteForce(graph Graph) float64 {
 
     }
 
+    factorial := func(n int) (r int) {
+        for r = 1; n > 1; n-- {
+            r *= n
+        }
+        return r
+    }
+
     // progress bar
-    depth := int(num) / 2;
-    p := pb.StartNew(travelingSalesmanBruteForceHelperCalls(int(num), int(num) - depth))
+    //depth := int(num) / 2;
+    p := pb.StartNew(factorial(len(vertices)))
+
+    end := num - 1
+    swap := make([]int, num - 1)
+    l := num - 2
+    length := math.MaxFloat64
+    for a := factorial(len(vertices)); a > 0; a-- {
+
+        // swap
+        for i, c := range swap {
+            if c > 0 {
+                j := i + c
+                vertices[i], vertices[j] = vertices[j], vertices[i]
+            }
+        }
+
+        baseLength := 0.0
+        for i, v := range vertices {
+            if i == end {
+                baseLength += v.distances[vertices[0].index]
+            } else {
+                baseLength += v.distances[vertices[i + 1].index]
+            }
+        }
+        if baseLength < length {
+            length = baseLength
+        }
+
+        // swap back
+        for i := len(swap) - 1; i >= 0; i-- {
+            c := swap[i]
+            if c > 0 {
+                vertices[i], vertices[i + c] = vertices[i + c], vertices[i]
+            }
+        }
+
+        // increment
+        for i := len(swap) - 1; i >= 0; i-- {
+            swap[i]++
+            if swap[i] >= (l - i + 2) {
+                swap[i] = 0
+            } else {
+                break
+            }
+        }
+
+        p.Increment()
+    }
 
     // performs brute force to find the length of the shortest hamilton circle
     var helper func(int, *pb.ProgressBar, *vertex, []*vertex) (*vertex, float64)
@@ -98,7 +153,7 @@ func TravelingSalesmanBruteForce(graph Graph) float64 {
     }
 
     // perform brute force
-    _, length := helper(depth, p, nil, vertices)
+    //_, length := helper(depth, p, nil, vertices)
 
     // print that we are done
     p.FinishPrint("Done.")
