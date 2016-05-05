@@ -15,7 +15,7 @@ func TravelingSalesmanBruteForce(graph Graph) float64 {
     type vertex struct {
         graphLib.VertexInterface
         index     int
-        distances []float64
+        distances [15]float64
     }
 
     // get the number of vertices
@@ -31,7 +31,6 @@ func TravelingSalesmanBruteForce(graph Graph) float64 {
         vertices[i] = &vertex{
             VertexInterface: v,
             index: i,
-            distances: make([]float64, num),
         }
 
         for i2, v2 := range vertices[:i] {
