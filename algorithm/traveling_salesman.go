@@ -15,9 +15,11 @@ func TravelingSalesmanBruteForce(graph Graph) float64 {
 
     // get the number of vertices
     num := int(graph.GetVertices().Count())
-    if num <= 1 || num > 15 {
+    // this algorithm only works with 5 to 15 vertices
+    if num <= 4 || num > 15 {
         return 0
     }
+    numMinus1 := num - 1
 
     type vertex struct {
         graphLib.VertexInterface
@@ -51,26 +53,26 @@ func TravelingSalesmanBruteForce(graph Graph) float64 {
     length := math.MaxFloat64
 
     // end helper
-    helpers[num - 1] = func(n int, front *vertex, currentLength float64) {
-        rest0index := vertices[n].index
-        l := currentLength + front.distances[rest0index] + startDist[rest0index]
+    helpers[num - 3] = func(n int, front *vertex, currentLength float64) {
+        rest0index, rest1 := vertices[n].index, vertices[n + 1]
+        l := currentLength + front.distances[rest0index] + rest1.distances[rest0index] + startDist[rest1.index]
         if l < length {
             length = l
         }
     }
 
     // front to pre-end helpers
-    for i := num - 2; i >= 0; i-- {
+    for i := num - 4; i >= 1; i-- {
         helpers[i] = func(n int, front *vertex, currentLength float64) {
 
             n1, rest0, rest0b, frontDist := n + 1, vertices[n], (*vertex)(nil), &front.distances
-            next := helpers[n1]
+            next := helpers[n]
 
             // when not changing the order
             next(n1, rest0, currentLength + frontDist[rest0.index])
 
             // combinations of changing the order
-            for i := n1; i < num; i++ {
+            for i := n1; i < numMinus1; i++ {
 
                 // change order
                 rest0b, vertices[i] = vertices[i], rest0
@@ -82,11 +84,25 @@ func TravelingSalesmanBruteForce(graph Graph) float64 {
                 vertices[i] = rest0b
             }
         }
-
     }
 
-    // perform brute force
-    helpers[0](1, vertices[0], 0.0)
+    currentLength, rest0, rest0b, frontDist := 0.0, vertices[1], (*vertex)(nil), &vertices[0].distances
+    next := helpers[1]
+
+    // combinations of changing the order
+    for i := 1; i < numMinus1; i++ {
+        for j := i + 1; j < num; j++ {
+
+            // change order
+            rest0b, vertices[i], vertices[numMinus1], vertices[j] = vertices[i], rest0, vertices[j], vertices[numMinus1]
+
+            // recursion
+            next(2, rest0b, currentLength + frontDist[rest0b.index])
+
+            // change back
+            vertices[i], vertices[numMinus1], vertices[j] = rest0b, vertices[j], vertices[numMinus1]
+        }
+    }
 
     // returns the length of the shortest hamilton circle
     return length

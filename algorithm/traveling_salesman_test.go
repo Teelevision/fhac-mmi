@@ -15,7 +15,7 @@ func TravelingSalesmanBruteForceBenchmark(b *testing.B, file string, result floa
 
     for n := 0; n < b.N; n++ {
         length := graph.TravelingSalesmanBruteForce()
-        if length != result {
+        if float64(int(length * 100 + 0.5)) / 100 != result {
             panic("TravelingSalesmanBruteForce() result is wrong")
         }
     }
@@ -27,7 +27,7 @@ func BenchmarkTravelingSalesmanBruteForce10(b *testing.B) {
 }
 
 func BenchmarkTravelingSalesmanBruteForce10e(b *testing.B) {
-    TravelingSalesmanBruteForceBenchmark(b, "test/K_10e.txt", 27.259999999999994)
+    TravelingSalesmanBruteForceBenchmark(b, "test/K_10e.txt", 27.26)
 }
 
 func BenchmarkTravelingSalesmanBruteForce12(b *testing.B) {
@@ -35,5 +35,5 @@ func BenchmarkTravelingSalesmanBruteForce12(b *testing.B) {
 }
 
 func BenchmarkTravelingSalesmanBruteForce12e(b *testing.B) {
-    TravelingSalesmanBruteForceBenchmark(b, "test/K_12e.txt", 36.129999999999995)
+    TravelingSalesmanBruteForceBenchmark(b, "test/K_12e.txt", 36.13)
 }
