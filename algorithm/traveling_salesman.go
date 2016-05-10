@@ -9,12 +9,12 @@ import (
 const tsbfMax = 15
 
 // simple wrapper
-func (this Graph) TravelingSalesmanBruteForce() float64 {
-    return TravelingSalesmanBruteForce(this)
+func (this Graph) TravelingSalesmanBruteForce(branchAndBound bool) float64 {
+    return TravelingSalesmanBruteForce(this, branchAndBound)
 }
 
 // returns the length of the shortest hamilton circle by brute force
-func TravelingSalesmanBruteForce(graph Graph) float64 {
+func TravelingSalesmanBruteForce(graph Graph, branchAndBound bool) float64 {
 
     // ----------------------------------------------
     // check pre-requirements
@@ -90,25 +90,57 @@ func TravelingSalesmanBruteForce(graph Graph) float64 {
 
     // intermediate helper
     for i := num - 4; i >= 1; i-- {
-        helpers[i] = func(n int, front, end *vertex, currentLength float64) {
+        if branchAndBound {
+            // when using branch and bound, check the length on each recursion level
+            // abort if already longer than the shortest known circle
+            helpers[i] = func(n int, front, end *vertex, currentLength float64) {
 
-            n1, rest0, rest0Temp, frontDist := n + 1, vertices[n], (*vertex)(nil), &front.distances
-            next := helpers[n]
+                n1, rest0, rest0Temp, frontDist, weightTmp := n + 1, vertices[n], (*vertex)(nil), &front.distances, 0.0
+                next := helpers[n]
 
-            // when not changing the order
-            next(n1, rest0, end, currentLength + frontDist[rest0.index])
+                // when not changing the order
+                weightTmp = currentLength + frontDist[rest0.index]
+                if weightTmp < length {
+                    next(n1, rest0, end, weightTmp)
+                }
 
-            // combinations of changing the order
-            for i := n1; i < lastVertex; i++ {
+                // combinations of changing the order
+                for i := n1; i < lastVertex; i++ {
 
-                // change order
-                rest0Temp, vertices[i] = vertices[i], rest0
+                    // change order
+                    rest0Temp, vertices[i] = vertices[i], rest0
 
-                // recursion
-                next(n1, rest0Temp, end, currentLength + frontDist[rest0Temp.index])
+                    // recursion
+                    weightTmp = currentLength + frontDist[rest0Temp.index]
+                    if weightTmp < length {
+                        next(n1, rest0Temp, end, weightTmp)
+                    }
 
-                // change back
-                vertices[i] = rest0Temp
+                    // change back
+                    vertices[i] = rest0Temp
+                }
+            }
+        } else {
+            helpers[i] = func(n int, front, end *vertex, currentLength float64) {
+
+                n1, rest0, rest0Temp, frontDist := n + 1, vertices[n], (*vertex)(nil), &front.distances
+                next := helpers[n]
+
+                // when not changing the order
+                next(n1, rest0, end, currentLength + frontDist[rest0.index])
+
+                // combinations of changing the order
+                for i := n1; i < lastVertex; i++ {
+
+                    // change order
+                    rest0Temp, vertices[i] = vertices[i], rest0
+
+                    // recursion
+                    next(n1, rest0Temp, end, currentLength + frontDist[rest0Temp.index])
+
+                    // change back
+                    vertices[i] = rest0Temp
+                }
             }
         }
     }

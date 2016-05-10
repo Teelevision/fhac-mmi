@@ -27,6 +27,7 @@ var config struct {
     nearestNeighbour    *bool
     doubleTree          *bool
     travelingSalesmanBF *bool
+    travelingSalesmanBB *bool
     startVertex         *int
     showTime            *bool
     cpuProfile          *string
@@ -46,6 +47,7 @@ func initConfig() {
     config.nearestNeighbour = flag.Bool("nn", false, "nearest neighbour hamilton circle length")
     config.doubleTree = flag.Bool("dt", false, "double tree hamilton circle length")
     config.travelingSalesmanBF = flag.Bool("tsbf", false, "traveling salesman brute force")
+    config.travelingSalesmanBB = flag.Bool("tsbb", false, "traveling salesman branch and bound")
     config.startVertex = flag.Int("start", 0, "start vertex")
     config.showTime = flag.Bool("t", false, "show time")
     config.cpuProfile = flag.String("cpuprofile", "", "write cpu profile to file")
@@ -173,8 +175,14 @@ func main() {
 
         // traveling salesman brute force
         if *config.travelingSalesmanBF {
-            length := graph.TravelingSalesmanBruteForce()
+            length := graph.TravelingSalesmanBruteForce(false)
             fmt.Println("Length of shortest Hamilton circle (brute force):", length)
+        }
+
+        // traveling salesman brute force
+        if *config.travelingSalesmanBB {
+            length := graph.TravelingSalesmanBruteForce(true)
+            fmt.Println("Length of shortest Hamilton circle (branch and bound):", length)
         }
 
         endTime := time.Now()
