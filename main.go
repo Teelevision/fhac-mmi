@@ -50,7 +50,7 @@ func initConfig() {
     config.doubleTree = flag.Bool("dt", false, "double tree hamilton circle length")
     config.travelingSalesmanBF = flag.Bool("tsbf", false, "traveling salesman brute force")
     config.travelingSalesmanBB = flag.Bool("tsbb", false, "traveling salesman branch and bound")
-    config.shortestPath = flag.String("sp", "", "shortest path (d|mbf|D|MBF)")
+    config.shortestPath = flag.String("sp", "", "shortest path (d|mbf)")
     config.startVertex = flag.Int("start", 0, "start vertex")
     config.endVertex = flag.Int("end", -1, "end vertex")
     config.showTime = flag.Bool("t", false, "show time")
@@ -197,13 +197,10 @@ func main() {
         switch *config.shortestPath {
         case "d":
             fmt.Println("Shortest paths (Dijkstra):")
-            graph.ShortestPaths(start, end)
-        case "D":
-            fmt.Println("Shortest paths (Dijkstra):")
+            graph.ShortestPathsDijkstra(start, end)
         case "mbf":
             fmt.Println("Shortest paths (Moore-Bellman-Ford):")
-        case "MBF":
-            fmt.Println("Shortest paths (Moore-Bellman-Ford):")
+            graph.ShortestPathsMBF(start, end)
         }
 
         endTime := time.Now()
