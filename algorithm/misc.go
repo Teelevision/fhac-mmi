@@ -16,6 +16,14 @@ func (this Graph) getNeighboursOfVertex(vertex graph.VertexInterface) graph.Vert
     return vertex.GetNeighbours()
 }
 
+// returns all or only the outgoing edges of the vertex depending on the graph
+func (this Graph) getEdgesOfVertex(vertex graph.VertexInterface) graph.EdgesInterface {
+    if this.IsDirected() {
+        return vertex.GetOutgoingEdges()
+    }
+    return vertex.GetEdges()
+}
+
 // returns the weight between the two given vertices
 func (this Graph) getWeightBetween(v1, v2 graph.VertexInterface) float64 {
     for _, side := range v1.GetEdgesFast() {

@@ -7,7 +7,7 @@ import (
     "time"
     "flag"
     "errors"
-    "github.com/teelevision/fhac-mmi/graph"
+    graphLib "github.com/teelevision/fhac-mmi/graph"
     "os"
     "runtime/pprof"
     "runtime"
@@ -28,7 +28,9 @@ var config struct {
     doubleTree          *bool
     travelingSalesmanBF *bool
     travelingSalesmanBB *bool
+    shortestPath        *string
     startVertex         *int
+    endVertex           *int
     showTime            *bool
     cpuProfile          *string
 }
@@ -48,7 +50,9 @@ func initConfig() {
     config.doubleTree = flag.Bool("dt", false, "double tree hamilton circle length")
     config.travelingSalesmanBF = flag.Bool("tsbf", false, "traveling salesman brute force")
     config.travelingSalesmanBB = flag.Bool("tsbb", false, "traveling salesman branch and bound")
+    config.shortestPath = flag.String("sp", "", "shortest path (d|mbf|D|MBF)")
     config.startVertex = flag.Int("start", 0, "start vertex")
+    config.endVertex = flag.Int("end", -1, "end vertex")
     config.showTime = flag.Bool("t", false, "show time")
     config.cpuProfile = flag.String("cpuprofile", "", "write cpu profile to file")
 
@@ -62,7 +66,7 @@ func initConfig() {
 }
 
 // parses the file and returns the graph
-func parseFile(file string) (*graph.Graph, error) {
+func parseFile(file string) (*graphLib.Graph, error) {
     switch *config.inputFormat {
     case "auto":
         fmt.Println("Input format \"auto\" is not yet implemented. Using \"list\".")
@@ -110,8 +114,12 @@ func main() {
 
         initTime := time.Now()
 
-        // get start vertex
+        // get start/end vertex
         start := graph.GetVertices().Get(uint(*config.startVertex))
+        end := graphLib.VertexInterface(nil)
+        if *config.endVertex >= 0 {
+            end = graph.GetVertices().Get(uint(*config.endVertex))
+        }
 
         // print info
         if *config.print {
@@ -183,6 +191,19 @@ func main() {
         if *config.travelingSalesmanBB {
             length := graph.TravelingSalesmanBruteForce(true)
             fmt.Println("Length of shortest Hamilton circle (branch and bound):", length)
+        }
+
+        // shortest paths
+        switch *config.shortestPath {
+        case "d":
+            fmt.Println("Shortest paths (Dijkstra):")
+            graph.ShortestPaths(start, end)
+        case "D":
+            fmt.Println("Shortest paths (Dijkstra):")
+        case "mbf":
+            fmt.Println("Shortest paths (Moore-Bellman-Ford):")
+        case "MBF":
+            fmt.Println("Shortest paths (Moore-Bellman-Ford):")
         }
 
         endTime := time.Now()
