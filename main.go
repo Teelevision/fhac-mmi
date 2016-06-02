@@ -29,6 +29,7 @@ var config struct {
     travelingSalesmanBF *bool
     travelingSalesmanBB *bool
     shortestPath        *string
+    maxFlow             *bool
     startVertex         *int
     endVertex           *int
     showTime            *bool
@@ -51,6 +52,7 @@ func initConfig() {
     config.travelingSalesmanBF = flag.Bool("tsbf", false, "traveling salesman brute force")
     config.travelingSalesmanBB = flag.Bool("tsbb", false, "traveling salesman branch and bound")
     config.shortestPath = flag.String("sp", "", "shortest path (d|mbf)")
+    config.maxFlow = flag.Bool("maxflow", false, "maximum flow")
     config.startVertex = flag.Int("start", 0, "start vertex")
     config.endVertex = flag.Int("end", -1, "end vertex")
     config.showTime = flag.Bool("t", false, "show time")
@@ -201,6 +203,12 @@ func main() {
         case "mbf":
             fmt.Println("Shortest paths (Moore-Bellman-Ford):")
             graph.ShortestPathsMBF(start, end)
+        }
+
+        // max flow Edmonds-Karp algorithm
+        if *config.maxFlow {
+            maxFlow := graph.MaxFlowEdmondsKarp(start, end)
+            fmt.Println("Maximum flow (Edmonds-Karp):", maxFlow)
         }
 
         endTime := time.Now()

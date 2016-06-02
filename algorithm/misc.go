@@ -36,6 +36,16 @@ func (this Graph) getWeightBetween(v1, v2 graph.VertexInterface) float64 {
     return -1
 }
 
+// returns the edge from the one to the other of the two given vertices
+func (this Graph) getEdgeFromTo(v1, v2 graph.VertexInterface) graph.EdgeInterface {
+    for _, edge := range v1.GetOutgoingEdges().All() {
+        if edge.GetEndVertex() == v2 {
+            return edge
+        }
+    }
+    return nil
+}
+
 // a function that takes a start vertex and then traverses the graph
 type TraverseFunction func(graph Graph, start graph.VertexInterface) []graph.VertexInterface
 
