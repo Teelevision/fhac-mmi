@@ -4,6 +4,8 @@ package graph
 // the general vertex has ingoing and outgoing edges
 type VertexInterface interface {
     idInterface
+    GetPos() int
+    setPos(int)
     GetEdges() EdgesInterface
     GetEdgesFast() [2](func() []EdgeInterface)
     GetIngoingEdges() editableEdgesInterface
@@ -16,8 +18,19 @@ type VertexInterface interface {
 // a basic vertex
 type vertex struct {
     id
+    pos           int
     ingoingEdges  editableEdgesInterface
     outgoingEdges editableEdgesInterface
+}
+
+// returns the position in a slice
+func (this vertex) GetPos() int {
+    return this.pos
+}
+
+// sets the position
+func (this *vertex) setPos(pos int) {
+    this.pos = pos
 }
 
 // returns a combination of ingoing an outgoing edges
@@ -72,6 +85,7 @@ func (this vertex) GetOutgoingNeighbours() VerticesInterface {
 // interface for a map of vertices
 type VerticesInterface interface {
     Get(uint) VertexInterface
+    GetPos(int) VertexInterface
     Count() uint
     All() []VertexInterface
 }
@@ -95,8 +109,14 @@ func (this vertices) Get(id uint) VertexInterface {
     return nil
 }
 
+// returns single vertex
+func (this vertices) GetPos(pos int) VertexInterface {
+    return this[pos]
+}
+
 // adds a vertex
 func (this *vertices) add(vertex VertexInterface) {
+    vertex.setPos(len(*this))
     *this = append(*this, vertex)
 }
 

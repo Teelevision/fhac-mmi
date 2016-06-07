@@ -4,6 +4,8 @@ package graph
 // an edge has both start and end vertex and a weight
 type EdgeInterface interface {
     idInterface
+    GetPos() int
+    setPos(int)
     GetStartVertex() VertexInterface
     GetEndVertex() VertexInterface
     GetOtherVertex(VertexInterface) VertexInterface
@@ -14,9 +16,20 @@ type EdgeInterface interface {
 // a basic edge
 type edge struct {
     id
+    pos    int
     start  VertexInterface
     end    VertexInterface
     weight float64
+}
+
+// returns the position
+func (this edge) GetPos() int {
+    return this.pos
+}
+
+// sets the position
+func (this edge) setPos(pos int) {
+    this.pos = pos
 }
 
 // returns the start vertex
@@ -50,6 +63,7 @@ func (this *edge) SetWeight(weight float64) {
 // interface for a map of edges
 type EdgesInterface interface {
     Get(uint) EdgeInterface
+    GetPos(int) EdgeInterface
     Count() uint
     All() []EdgeInterface
 }
@@ -79,6 +93,11 @@ func (this edges) Get(id uint) EdgeInterface {
     return nil
 }
 
+// returns the edge at the given position
+func (this edges) GetPos(pos int) EdgeInterface {
+    return this[pos]
+}
+
 // adds an edge
 func (this *edges) add(edge EdgeInterface) {
     // if slice is full, double its size
@@ -87,6 +106,7 @@ func (this *edges) add(edge EdgeInterface) {
         copy(newSlice, *this)
         *this = newSlice
     }
+    edge.setPos(len(*this))
     *this = append(*this, edge)
 }
 
@@ -135,4 +155,16 @@ func (this mergedEdges) All() []EdgeInterface {
         allEdges = append(allEdges, edges.All()...)
     }
     return allEdges
+}
+
+// returns the edge at the given position
+func (this mergedEdges) GetPos(pos int) EdgeInterface {
+    for _, edges := range this {
+        if c := int(edges.Count()); pos < c {
+            return edges.GetPos(pos)
+        } else {
+            pos -= c
+        }
+    }
+    return nil
 }

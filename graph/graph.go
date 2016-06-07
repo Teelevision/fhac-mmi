@@ -111,6 +111,49 @@ func (this *Graph) NewWeightedEdge(start, end VertexInterface, weight float64) E
     return edge
 }
 
+func (this Graph) Transform(tV func(VertexInterface) VertexInterface, tE func(EdgeInterface) EdgeInterface) *Graph {
+    g := &Graph{
+        vertices: make(vertices, 0, this.GetVertices().Count()),
+        edges: make(edges, 0, this.GetEdges().Count()),
+        verticesIdProvider: idProvider(0),
+        edgesIdProvider: idProvider(0),
+        directed: this.IsDirected(),
+    }
+
+    // transform vertices
+    if tV == nil {
+        // default: clone
+        tV = func(v VertexInterface) VertexInterface {
+            return &vertex{
+                id: id(v.GetId()),
+                ingoingEdges: v.GetIngoingEdges(),
+                outgoingEdges: v.GetOutgoingEdges(),
+            }
+        }
+    }
+    for _, v := range this.vertices.All() {
+        g.vertices.add(tV(v))
+    }
+
+    // transform edges
+    if tE == nil {
+        // default: clone
+        tE = func(e EdgeInterface) EdgeInterface {
+            return &edge{
+                id: id(e.GetId()),
+                start: e.GetStartVertex(),
+                end: e.GetEndVertex(),
+                weight: e.GetWeight(),
+            }
+        }
+    }
+    for _, v := range this.edges.All() {
+        g.edges.add(tE(v))
+    }
+
+    return g
+}
+
 // clone the graph without edges
 func CloneGraphWithoutEdges(graph GraphInterface, numEdges uint) *Graph {
     return &Graph{
