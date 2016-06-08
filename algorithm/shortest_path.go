@@ -12,7 +12,7 @@ func (this Graph) ShortestPathsDijkstra(start, end graphLib.VertexInterface) {
     ShortestPathsDijkstra(this, start, end)
 }
 
-// returns the length of the hamilton circle calculated by the nearest neighbour algorithm
+//
 func ShortestPathsDijkstra(graph Graph, start, end graphLib.VertexInterface) {
 
     // number of vertices
@@ -160,12 +160,12 @@ func (this *shortestPathQueue) popNearest() *shortestPathVertex {
 
 
 // simple wrapper
-func (this Graph) ShortestPathsMBF(start, end graphLib.VertexInterface) {
-    ShortestPathsMBF(this, start, end)
+func (this Graph) ShortestPathsMBF(start, end graphLib.VertexInterface) (float64, []graphLib.VertexInterface, []graphLib.VertexInterface) {
+    return ShortestPathsMBF(this, start, end)
 }
 
-// returns the length of the hamilton circle calculated by the nearest neighbour algorithm
-func ShortestPathsMBF(graph Graph, start, end graphLib.VertexInterface) {
+//
+func ShortestPathsMBF(graph Graph, start, end graphLib.VertexInterface) (float64, []graphLib.VertexInterface, []graphLib.VertexInterface) {
 
     // number of vertices
     num := graph.GetVertices().Count()
@@ -224,35 +224,29 @@ func ShortestPathsMBF(graph Graph, start, end graphLib.VertexInterface) {
 
     // check for loop
     if changed != nil {
-        fmt.Print("Negative loop detected: ")
         // go num times back
         for n := int(num); n >= 0; n-- {
             changed = changed.prev
         }
-        // we can be sure now that we are inside the loop
-        for v := changed.prev; v != changed; v = v.prev {
-            fmt.Print(v.GetId(), "-")
-        }
-        fmt.Println(changed.GetId())
-        return
+        return 0.0, nil, buildShortestPath(changed.prev, changed, 1)
     }
 
-    // check if every / the end vertex was reached and print path(s)
-    if end == nil {
-        for _, v := range m {
-            if v.prev == nil {
-                fmt.Printf("No way found to vertex %d. Aborting.\n", v.GetId())
-                return
-            }
-            printShortestPath(v, start)
-        }
+    // check if the end vertex was reached and print path(s)
+    v := m[end]
+    if v.prev == nil {
+        // no way found
+        return 0.0, nil, nil
+    }
+    return v.distance, buildShortestPath(v, m[start], 1), nil
+
+}
+
+func buildShortestPath(v, until *shortestPathVertex, depth int) (path []graphLib.VertexInterface) {
+    if v == until {
+        path = make([]graphLib.VertexInterface, 0, depth)
     } else {
-        v := m[end]
-        if v.prev == nil {
-            fmt.Printf("No way found to vertex %d. Aborting.\n", v.GetId())
-            return
-        }
-        printShortestPath(v, start)
+        path = buildShortestPath(v.prev, until, depth + 1)
     }
-
+    path = append(path, v)
+    return path
 }

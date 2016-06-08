@@ -201,8 +201,27 @@ func main() {
             fmt.Println("Shortest paths (Dijkstra):")
             graph.ShortestPathsDijkstra(start, end)
         case "mbf":
+            e := end
+            if e == nil {
+                e = graph.GetVertices().Get(graph.GetVertices().Count() - 1)
+            }
             fmt.Println("Shortest paths (Moore-Bellman-Ford):")
-            graph.ShortestPathsMBF(start, end)
+            distance, path, circle := graph.ShortestPathsMBF(start, e)
+            if path == nil && circle == nil {
+                fmt.Printf("No way found from %d to %d.\n", start.GetPos(), e.GetPos())
+            } else if circle != nil {
+                fmt.Print("Negative circle found:")
+                for _, v := range circle {
+                    fmt.Printf(" %d", v.GetPos())
+                }
+                fmt.Println()
+            } else {
+                fmt.Printf("Result (length %f):", distance)
+                for _, v := range path {
+                    fmt.Printf(" %d", v.GetPos())
+                }
+                fmt.Println()
+            }
         }
 
         // max flow Edmonds-Karp algorithm
