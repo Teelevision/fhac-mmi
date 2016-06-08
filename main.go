@@ -30,6 +30,7 @@ var config struct {
     travelingSalesmanBB *bool
     shortestPath        *string
     maxFlow             *bool
+    optimalFlow         *string
     startVertex         *int
     endVertex           *int
     showTime            *bool
@@ -53,6 +54,7 @@ func initConfig() {
     config.travelingSalesmanBB = flag.Bool("tsbb", false, "traveling salesman branch and bound")
     config.shortestPath = flag.String("sp", "", "shortest path (d|mbf)")
     config.maxFlow = flag.Bool("maxflow", false, "maximum flow")
+    config.optimalFlow = flag.String("of", "", "optimal flow (cc|ssp)")
     config.startVertex = flag.Int("start", 0, "start vertex")
     config.endVertex = flag.Int("end", -1, "end vertex")
     config.showTime = flag.Bool("t", false, "show time")
@@ -230,6 +232,23 @@ func main() {
         if *config.maxFlow {
             maxFlow := graph.MaxFlowEdmondsKarp(start, end)
             fmt.Println("Maximum flow (Edmonds-Karp):", maxFlow)
+        }
+
+        // optimal flow
+        if *config.optimalFlow != "" {
+            var usage []float64
+            switch *config.optimalFlow {
+            case "cc":
+                fmt.Println("Optimal flow (Cycle-Canceling):")
+                usage = graph.OptimalFlowCycleCancelling()
+            case "ssp":
+                fmt.Println("Optimal flow (Successive Shortest Path):")
+                usage = graph.OptimalFlowSuccessiveShortestPath()
+            }
+            for i, u := range usage {
+                e := graph.GetEdges().GetPos(i)
+                fmt.Printf("  %d -> %d: %f\n", e.GetStartVertex().GetPos(), e.GetEndVertex().GetPos(), u)
+            }
         }
 
         endTime := time.Now()
