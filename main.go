@@ -38,7 +38,7 @@ var config struct {
 
 // inits the current config
 func initConfig() {
-    config.inputFormat = flag.String("f", "list", "input format (matrix|list)")
+    config.inputFormat = flag.String("f", "list", "input format (matrix|list|flow)")
     config.weights = flag.Bool("w", false, "input list contains weights")
     config.directed = flag.Bool("d", false, "graph is directed")
     config.print = flag.Bool("print", true, "print info")
@@ -77,6 +77,8 @@ func parseFile(file string) (*graphLib.Graph, error) {
         return parser.ParseEdgesFile(file, *config.weights)
     case "matrix":
         return parser.ParseAdjacencyMatrixFile(file)
+    case "flow":
+        return parser.ParseFlowFile(file)
     default:
         panic(errors.New(fmt.Sprintf("Unkown input format \"%s\".", *config.inputFormat)))
     }
