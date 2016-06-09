@@ -15,7 +15,8 @@ func ParseFlowFile(file string) (*graphLib.Graph, error) {
 
 type FlowVertex struct {
     graphLib.VertexInterface
-    Balance float64
+    Balance     float64
+    FlowBalance float64
 }
 
 func (this FlowVertex) Clone() graphLib.VertexInterface {
@@ -25,20 +26,46 @@ func (this FlowVertex) Clone() graphLib.VertexInterface {
     }
 }
 
+func (this FlowVertex) GetBalance() float64 {
+    return this.Balance
+}
+
+func (this FlowVertex) GetFlowBalance() float64 {
+    return this.FlowBalance
+}
+
+func (this *FlowVertex) SetFlowBalance(balance float64) {
+    this.FlowBalance = balance
+}
+
 type FlowEdge struct {
     graphLib.EdgeInterface
     Cost float64
+    Flow float64
 }
 
 func (this FlowEdge) Clone() graphLib.EdgeInterface {
     return &FlowEdge{
         EdgeInterface: this.EdgeInterface.Clone(),
         Cost: this.Cost,
+        Flow: this.Flow,
     }
 }
 
 func (this FlowEdge) GetCapacity() float64 {
     return this.GetWeight()
+}
+
+func (this FlowEdge) GetCost() float64 {
+    return this.Cost
+}
+
+func (this FlowEdge) GetFlow() float64 {
+    return this.Flow
+}
+
+func (this *FlowEdge) SetFlow(flow float64) {
+    this.Flow = flow;
 }
 
 

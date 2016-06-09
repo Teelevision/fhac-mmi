@@ -6,29 +6,20 @@ import (
 )
 
 // simple wrapper
-func (this Graph) MaxFlowEdmondsKarp(start, end graphLib.VertexInterface) (float64, []*ekEdge) {
+func (this Graph) MaxFlowEdmondsKarp(start, end graphLib.VertexInterface) (float64, []FlowEdge) {
     return MaxFlowEdmondsKarp(this, start, end)
 }
 
 // returns the maximum flow using the Edmonds-Karp algorithm
-func MaxFlowEdmondsKarp(graph Graph, start, end graphLib.VertexInterface) (float64, []*ekEdge) {
+func MaxFlowEdmondsKarp(graph Graph, start, end graphLib.VertexInterface) (float64, []FlowEdge) {
 
-    numEdges := graph.GetEdges().Count()
-
-    // wrap graph so that we can use our own edges
-    G := &ekGraph{
-        Graph: graph,
-        edges: make([]*ekEdge, numEdges),
-    }
-
-    // create vertices
-    for i, e := range G.GetEdges().All() {
-        edge := &ekEdge{
+    // create flow graph
+    G := &FlowGraph{Graph{graph.Transform(nil, func(e graphLib.EdgeInterface) graphLib.EdgeInterface {
+        return &ekEdge{
             EdgeInterface: e,
             flow: 0.0,
         }
-        G.edges[i] = edge
-    }
+    })}}
 
     // get paths from start to end until none can be found anymore
     s, e, maxFlow := start.GetId(), end.GetId(), 0.0
@@ -37,9 +28,9 @@ func MaxFlowEdmondsKarp(graph Graph, start, end graphLib.VertexInterface) (float
         // add flow to all normal edges and subtract it from all reverted edges of the path
         for _, edge := range path {
             if edge.revert {
-                edge.flow -= flow
+                edge.SetFlow(edge.GetFlow() - flow)
             } else {
-                edge.flow += flow
+                edge.SetFlow(edge.GetFlow() + flow)
             }
         }
 
@@ -48,12 +39,27 @@ func MaxFlowEdmondsKarp(graph Graph, start, end graphLib.VertexInterface) (float
 
     }
 
-    return maxFlow, G.edges
+    return maxFlow, G.GetAllFlowEdges()
 }
 
-type ekGraph struct {
+type FlowEdge interface {
+    graphLib.EdgeInterface
+    GetFlow() float64
+    SetFlow(float64)
+    GetCapacity() float64
+    GetCost() float64
+}
+
+type FlowGraph struct {
     Graph
-    edges []*ekEdge
+}
+
+func (this FlowGraph) GetAllFlowEdges() []FlowEdge {
+    edges := make([]FlowEdge, this.GetEdges().Count())
+    for i, e := range this.GetEdges().All() {
+        edges[i] = e.(FlowEdge)
+    }
+    return edges
 }
 
 type ekEdge struct {
@@ -61,12 +67,24 @@ type ekEdge struct {
     flow float64
 }
 
-func (this ekEdge) getCapacity() float64 {
-    return this.GetWeight() - this.flow;
+func (this ekEdge) GetFlow() float64 {
+    return this.flow
+}
+
+func (this *ekEdge) SetFlow(flow float64) {
+    this.flow = flow
+}
+
+func (this ekEdge) GetCost() float64 {
+    return 0
+}
+
+func (this ekEdge) GetCapacity() float64 {
+    return this.GetWeight();
 }
 
 type ekEdgeFlow struct {
-    *ekEdge
+    FlowEdge
     revert bool
 }
 
@@ -75,7 +93,7 @@ type residualGraph struct {
 }
 
 // creates a residual graph
-func (this ekGraph) getResidualGraph() (residualGraph) {
+func (this FlowGraph) getResidualGraph() (residualGraph) {
     resiG := graphLib.DirectedGraph()
 
     // copy vertices
@@ -86,17 +104,17 @@ func (this ekGraph) getResidualGraph() (residualGraph) {
 
     // add edges
     rVertices := resiG.GetVertices()
-    for _, e := range this.edges {
+    for _, e := range this.GetAllFlowEdges() {
         a, b := rVertices.Get(e.GetStartVertex().GetId()), rVertices.Get(e.GetEndVertex().GetId())
 
         // normal direction
-        if capacity := e.getCapacity(); capacity > 0 {
-            resiG.NewWeightedEdge(a, b, capacity)
+        if restCapacity := e.GetCapacity() - e.GetFlow(); restCapacity > 0 {
+            resiG.NewWeightedEdge(a, b, e.GetCost())
         }
 
         // opposite direction
-        if e.flow > 0 {
-            resiG.NewWeightedEdge(b, a, e.flow)
+        if e.GetFlow() > 0 {
+            resiG.NewWeightedEdge(b, a, -1 * e.GetCost())
         }
 
     }
@@ -104,7 +122,7 @@ func (this ekGraph) getResidualGraph() (residualGraph) {
 }
 
 // returns the next path
-func (this *ekGraph) nextPath(start, end uint) ([]*ekEdgeFlow, float64) {
+func (this *FlowGraph) nextPath(start, end uint) ([]*ekEdgeFlow, float64) {
     vertices := this.GetVertices()
 
     // create residual graph
@@ -121,6 +139,7 @@ func (this *ekGraph) nextPath(start, end uint) ([]*ekEdgeFlow, float64) {
 
     // get possible flow
     maxFlow := math.MaxFloat64
+    edges := this.GetAllFlowEdges()
     for i := len(path) - 1; i > 0; i-- {
 
         // path is reverted
@@ -132,13 +151,13 @@ func (this *ekGraph) nextPath(start, end uint) ([]*ekEdgeFlow, float64) {
             edge, revert = this.getEdgeFromTo(to, from), true
         }
         edgeFlow := &ekEdgeFlow{
-            ekEdge: this.edges[edge.GetPos()],
+            FlowEdge: edges[edge.GetPos()],
             revert: revert,
         }
 
         // look for the bottleneck
-        if edgeFlow.getCapacity() < maxFlow {
-            maxFlow = edgeFlow.getCapacity()
+        if restCapacity := edgeFlow.GetCapacity() - edgeFlow.GetFlow(); restCapacity < maxFlow {
+            maxFlow = restCapacity
         }
 
         // add vertex to reverse path
