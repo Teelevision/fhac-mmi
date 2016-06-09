@@ -16,7 +16,7 @@ func (this Graph) OptimalFlowCycleCancelling() (float64, []float64) {
 func OptimalFlowCycleCancelling(graph Graph) (float64, []float64) {
 
     // add super source and super destination
-    superGraph, superSource, superDestination, sumSource, sumDestination, sources, destinations := graph.createSuperSourceAndDestinationGraph()
+    superGraph, superSource, superDestination, sumSource, sumDestination := graph.createSuperSourceAndDestinationGraph()
     if sumSource != sumDestination {
         panic(fmt.Sprintf("Source and destination sizes do not match (%f vs %f).", sumSource, sumDestination))
     }
@@ -38,8 +38,8 @@ func OptimalFlowCycleCancelling(graph Graph) (float64, []float64) {
     edges := G.GetEdges()
     for go_on := true; go_on; {
         go_on = false
-        for _, source := range sources {
-            for _, destination := range destinations {
+        for _, source := range vertices.All() {
+            for _, destination := range vertices.All() {
 
                 // build residual graph
                 resiG := Graph{G.getResidualGraph().Graph}
@@ -118,16 +118,13 @@ func OptimalFlowSuccessiveShortestPath(graph Graph) ([]float64) {
 
 // returns a new graph that contains a super source and destination and is otherwise just a copy of the base graph
 // vertices must be of type parser.FlowVertex
-func (this Graph) createSuperSourceAndDestinationGraph() (Graph, graphLib.VertexInterface, graphLib.VertexInterface, float64, float64, []graphLib.VertexInterface, []graphLib.VertexInterface) {
+func (this Graph) createSuperSourceAndDestinationGraph() (Graph, graphLib.VertexInterface, graphLib.VertexInterface, float64, float64) {
 
     // create a new graph
     graph := this.Clone()
 
     // add super source and destination vertices
     superSource, superDestionation := graph.NewVertex(), graph.NewVertex()
-
-    // sources and destinations
-    sources, destinations := []graphLib.VertexInterface{}, []graphLib.VertexInterface{}
 
     // sum up source and destination sizes
     sumSource, sumDestination := 0.0, 0.0
@@ -138,14 +135,12 @@ func (this Graph) createSuperSourceAndDestinationGraph() (Graph, graphLib.Vertex
             if b := v.(*parser.FlowVertex).Balance; b > 0 {
                 graph.NewWeightedEdge(superSource, v, b)
                 sumSource += b
-                sources = append(sources, v)
             } else if b < 0 {
                 graph.NewWeightedEdge(v, superDestionation, -1 * b)
                 sumDestination -= b
-                destinations = append(destinations, v)
             }
         }
     }
 
-    return Graph{graph}, superSource, superDestionation, sumSource, sumDestination, sources, destinations
+    return Graph{graph}, superSource, superDestionation, sumSource, sumDestination
 }
