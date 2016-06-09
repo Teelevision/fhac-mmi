@@ -21,6 +21,7 @@ func OptimalFlowCycleCancelling(graph Graph) (float64, []float64) {
         panic(fmt.Sprintf("Source and destination sizes do not match (%f vs %f).", sumSource, sumDestination))
     }
 
+    // get the maximum flow through the graph
     maxFlow, maxFlowEdges := superGraph.MaxFlowEdmondsKarp(superSource, superDestination)
     if maxFlow != sumSource {
         panic(fmt.Sprintf("No flow was found (needed %f, got %f).", sumSource, maxFlow))
@@ -38,48 +39,59 @@ func OptimalFlowCycleCancelling(graph Graph) (float64, []float64) {
     edges := G.GetEdges()
     for go_on := true; go_on; {
         go_on = false
-        for _, source := range vertices.All() {
-            for _, destination := range vertices.All() {
 
-                // build residual graph
-                resiG := Graph{G.getResidualGraph().Graph}
+        // try every vertices
+        for _, someVertex := range vertices.All() {
 
-                _, _, cycle := resiG.ShortestPathsMBF(resiG.GetVertices().Get(source.GetId()), resiG.GetVertices().Get(destination.GetId()))
+            // build residual graph
+            resiG := Graph{G.getResidualGraph().Graph}
 
-                if cycle != nil {
-                    l := len(cycle)
+            // find cycle
+            someVertex = resiG.GetVertices().Get(someVertex.GetId())
+            _, _, cycle := resiG.ShortestPathsMBF(someVertex, someVertex)
 
-                    // find maximum
-                    maxFlow := math.MaxFloat64
-                    for u, v := -1, 0; v < l; u, v = v, v + 1 {
-                        u, v := vertices.Get(cycle[(u + l) % l].GetId()), vertices.Get(cycle[v].GetId())
-                        e, revert := G.getEdgeFromTo(u, v), false
-                        if e == nil {
-                            e, revert = G.getEdgeFromTo(v, u), true
-                        }
-                        edge := edges.GetPos(e.GetPos()).(FlowEdge)
-                        w := edge.GetCapacity() - edge.GetFlow();
-                        if revert {
-                            w = edge.GetFlow()
-                        }
-                        if w < maxFlow {
-                            maxFlow = w
-                        }
+            if cycle != nil {
+                l := len(cycle)
+
+                edgesToUpdate := make([]struct {
+                    FlowEdge
+                    factor float64
+                }, l)
+
+                // find maximum
+                maxFlow := math.MaxFloat64
+                for u, v := -1, 0; v < l; u, v = v, v + 1 {
+
+                    // get edge
+                    f, t := vertices.Get(cycle[(u + l) % l].GetId()), vertices.Get(cycle[v].GetId())
+                    e, revert, factor := G.getEdgeFromTo(f, t), false, 1.0
+                    if e == nil {
+                        e, revert, factor = G.getEdgeFromTo(t, f), true, -1.0
+                    }
+                    edge := edges.GetPos(e.GetPos()).(FlowEdge)
+
+                    // get the max flow over this edge
+                    w := edge.GetCapacity() - edge.GetFlow();
+                    if revert {
+                        w = edge.GetFlow()
                     }
 
-                    // apply flow
-                    for u, v := -1, 0; v < l; u, v = v, v + 1 {
-                        u, v := vertices.Get(cycle[(u + l) % l].GetId()), vertices.Get(cycle[v].GetId())
-                        e, faktor := G.getEdgeFromTo(u, v), 1.0
-                        if e == nil {
-                            e, faktor = G.getEdgeFromTo(v, u), -1.0
-                        }
-                        edge := edges.GetPos(e.GetPos()).(FlowEdge)
-                        edge.SetFlow(edge.GetFlow() + faktor * maxFlow)
+                    // update the cycle's max flow if lower
+                    if w < maxFlow {
+                        maxFlow = w
                     }
 
-                    go_on = true
+                    // update this edge after the cycle's max flow is found
+                    edgesToUpdate[v].FlowEdge = edge
+                    edgesToUpdate[v].factor = factor
                 }
+
+                // apply flow
+                for _, e := range edgesToUpdate {
+                    e.SetFlow(e.GetFlow() + e.factor * maxFlow)
+                }
+
+                go_on = true
             }
         }
     }
