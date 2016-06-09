@@ -18,10 +18,29 @@ type FlowVertex struct {
     Balance float64
 }
 
+func (this FlowVertex) Clone() graphLib.VertexInterface {
+    return &FlowVertex{
+        VertexInterface: this.VertexInterface.Clone(),
+        Balance: this.Balance,
+    }
+}
+
 type FlowEdge struct {
     graphLib.EdgeInterface
-    Capacity float64
+    Cost float64
 }
+
+func (this FlowEdge) Clone() graphLib.EdgeInterface {
+    return &FlowEdge{
+        EdgeInterface: this.EdgeInterface.Clone(),
+        Cost: this.Cost,
+    }
+}
+
+func (this FlowEdge) GetCapacity() float64 {
+    return this.GetWeight()
+}
+
 
 // parses an file containing a flow graph
 func ParseFlow(reader io.Reader) (*graphLib.Graph, error) {
@@ -46,7 +65,7 @@ func ParseFlow(reader io.Reader) (*graphLib.Graph, error) {
 
 
     // create edges
-    capacities := make([]float64, 0)
+    costs := make([]float64, 0)
     for {
 
         // parse start vertex and test if input is empty
@@ -63,28 +82,28 @@ func ParseFlow(reader io.Reader) (*graphLib.Graph, error) {
             return graph, err
         }
 
-        // parse weight
+        // parse cost
+        cost, err := parseFloat(scanner)
+        if err != nil {
+            return graph, err
+        }
+        costs = append(costs, cost)
+
+        // parse capacity
         weight, err := parseFloat(scanner)
         if err != nil {
             return graph, err
         }
 
-        // parse capacity
-        capacity, err := parseFloat(scanner)
-        if err != nil {
-            return graph, err
-        }
-        capacities = append(capacities, capacity)
-
         // create edge
         graph.NewWeightedEdge(vertices[start], vertices[end], weight)
     }
 
-    // add capacity to edges
+    // add cost to edges
     graph = graph.Transform(nil, func(edge graphLib.EdgeInterface) graphLib.EdgeInterface {
         return &FlowEdge{
             EdgeInterface: edge,
-            Capacity: capacities[edge.GetPos()],
+            Cost: costs[edge.GetPos()],
         }
     })
 

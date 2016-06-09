@@ -11,6 +11,7 @@ type EdgeInterface interface {
     GetOtherVertex(VertexInterface) VertexInterface
     GetWeight() float64
     SetWeight(weight float64)
+    Clone() EdgeInterface
 }
 
 // a basic edge
@@ -28,7 +29,7 @@ func (this edge) GetPos() int {
 }
 
 // sets the position
-func (this edge) setPos(pos int) {
+func (this *edge) setPos(pos int) {
     this.pos = pos
 }
 
@@ -52,12 +53,22 @@ func (this edge) GetOtherVertex(vertex VertexInterface) VertexInterface {
 
 // returns the weight
 func (this edge) GetWeight() float64 {
-    return this.weight;
+    return this.weight
 }
 
 // sets the weight
 func (this *edge) SetWeight(weight float64) {
-    this.weight = weight;
+    this.weight = weight
+}
+
+// clones the edge
+func (this edge) Clone() EdgeInterface {
+    return &edge{
+        id: id(this.GetId()),
+        start: this.GetStartVertex(),
+        end: this.GetEndVertex(),
+        weight: this.GetWeight(),
+    }
 }
 
 // interface for a map of edges
@@ -106,7 +117,6 @@ func (this *edges) add(edge EdgeInterface) {
         copy(newSlice, *this)
         *this = newSlice
     }
-    edge.setPos(len(*this))
     *this = append(*this, edge)
 }
 

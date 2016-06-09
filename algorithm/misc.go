@@ -5,7 +5,7 @@ import (
 )
 
 type Graph struct {
-    graph.GraphInterface
+    *graph.Graph
 }
 
 // returns all or only the outgoing neighbours of the vertex depending on the graph
@@ -39,7 +39,7 @@ func (this Graph) getWeightBetween(v1, v2 graph.VertexInterface) float64 {
 // returns the edge from the one to the other of the two given vertices
 func (this Graph) getEdgeFromTo(v1, v2 graph.VertexInterface) graph.EdgeInterface {
     for _, edge := range v1.GetOutgoingEdges().All() {
-        if edge.GetEndVertex() == v2 {
+        if edge.GetEndVertex().GetId() == v2.GetId() {
             return edge
         }
     }

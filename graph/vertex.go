@@ -13,6 +13,7 @@ type VertexInterface interface {
     GetNeighbours() VerticesInterface
     GetIngoingNeighbours() VerticesInterface
     GetOutgoingNeighbours() VerticesInterface
+    Clone() VertexInterface
 }
 
 // a basic vertex
@@ -82,6 +83,15 @@ func (this vertex) GetOutgoingNeighbours() VerticesInterface {
     return vertices(v)
 }
 
+// clones the vertex
+func (this vertex) Clone() VertexInterface {
+    return &vertex{
+        id: id(this.GetId()),
+        ingoingEdges: this.GetIngoingEdges(),
+        outgoingEdges: this.GetOutgoingEdges(),
+    }
+}
+
 // interface for a map of vertices
 type VerticesInterface interface {
     Get(uint) VertexInterface
@@ -116,7 +126,6 @@ func (this vertices) GetPos(pos int) VertexInterface {
 
 // adds a vertex
 func (this *vertices) add(vertex VertexInterface) {
-    vertex.setPos(len(*this))
     *this = append(*this, vertex)
 }
 

@@ -3,16 +3,15 @@ package algorithm
 import (
     graphLib "github.com/teelevision/fhac-mmi/graph"
     "math"
-    "fmt"
 )
 
 // simple wrapper
-func (this Graph) MaxFlowEdmondsKarp(start, end graphLib.VertexInterface) (float64) {
+func (this Graph) MaxFlowEdmondsKarp(start, end graphLib.VertexInterface) (float64, []*ekEdge) {
     return MaxFlowEdmondsKarp(this, start, end)
 }
 
 // returns the maximum flow using the Edmonds-Karp algorithm
-func MaxFlowEdmondsKarp(graph Graph, start, end graphLib.VertexInterface) (float64) {
+func MaxFlowEdmondsKarp(graph Graph, start, end graphLib.VertexInterface) (float64, []*ekEdge) {
 
     numEdges := graph.GetEdges().Count()
 
@@ -20,7 +19,6 @@ func MaxFlowEdmondsKarp(graph Graph, start, end graphLib.VertexInterface) (float
     G := &ekGraph{
         Graph: graph,
         edges: make([]*ekEdge, numEdges),
-        mapEdges: make(map[graphLib.EdgeInterface]*ekEdge, numEdges),
     }
 
     // create vertices
@@ -30,7 +28,6 @@ func MaxFlowEdmondsKarp(graph Graph, start, end graphLib.VertexInterface) (float
             flow: 0.0,
         }
         G.edges[i] = edge
-        G.mapEdges[e] = edge
     }
 
     // get paths from start to end until none can be found anymore
@@ -51,13 +48,12 @@ func MaxFlowEdmondsKarp(graph Graph, start, end graphLib.VertexInterface) (float
 
     }
 
-    return maxFlow
+    return maxFlow, G.edges
 }
 
 type ekGraph struct {
     Graph
-    edges    []*ekEdge
-    mapEdges map[graphLib.EdgeInterface]*ekEdge
+    edges []*ekEdge
 }
 
 type ekEdge struct {
@@ -131,14 +127,13 @@ func (this *ekGraph) nextPath(start, end uint) ([]*ekEdgeFlow, float64) {
         from, to := vertices.Get(path[i]), vertices.Get(path[i - 1])
 
         // get edge
-        edgeFlow := &ekEdgeFlow{
-            ekEdge: this.mapEdges[this.getEdgeFromTo(from, to)],
-            revert: false,
+        edge, revert := this.getEdgeFromTo(from, to), false
+        if edge == nil {
+            edge, revert = this.getEdgeFromTo(to, from), true
         }
-        if edgeFlow.ekEdge == nil {
-            // get other edge
-            edgeFlow.ekEdge = this.mapEdges[this.getEdgeFromTo(to, from)]
-            edgeFlow.revert = true
+        edgeFlow := &ekEdgeFlow{
+            ekEdge: this.edges[edge.GetPos()],
+            revert: revert,
         }
 
         // look for the bottleneck
@@ -150,7 +145,6 @@ func (this *ekGraph) nextPath(start, end uint) ([]*ekEdgeFlow, float64) {
         orderedEdges = append(orderedEdges, edgeFlow)
     }
 
-    fmt.Println(path, maxFlow)
     return orderedEdges, maxFlow
 };
 

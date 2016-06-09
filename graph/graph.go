@@ -63,13 +63,20 @@ func (this Graph) GetEdges() EdgesInterface {
     return this.edges
 }
 
+// adds a new vertex
+func (this *Graph) AddVertex(vertex VertexInterface) VertexInterface {
+    vertex.setPos(len(this.vertices))
+    this.vertices.add(vertex)
+    return vertex
+}
+
 // creates, adds and returns a new vertex
-func (this *Graph) NewVertex() *vertex {
+func (this *Graph) NewVertex() VertexInterface {
     return this.NewVertexWithId(uint(this.edgesIdProvider.NewId()))
 }
 
 // creates, adds and returns a new vertex with given id
-func (this *Graph) NewVertexWithId(i uint) *vertex {
+func (this *Graph) NewVertexWithId(i uint) VertexInterface {
 
     // create with empty map of ingoing and outgoing edges
     vertex := &vertex{
@@ -78,17 +85,38 @@ func (this *Graph) NewVertexWithId(i uint) *vertex {
         outgoingEdges: newEdges(10),
     }
 
-    // add to this graph
-    this.vertices.add(vertex)
+    return this.AddVertex(vertex)
+}
 
-    return vertex
+// adds a new custom vertex with given id
+func (this *Graph) NewCustomVertex(transform func(VertexInterface) VertexInterface) VertexInterface {
+
+    // create with empty map of ingoing and outgoing edges
+    vertex := &vertex{
+        id: this.edgesIdProvider.NewId(),
+        ingoingEdges: newEdges(10),
+        outgoingEdges: newEdges(10),
+    }
+
+    return this.AddVertex(transform(vertex))
+}
+
+// creates, adds and returns a new edge with a weight of 1
+func (this *Graph) AddEdge(edge EdgeInterface) EdgeInterface {
+    // add edge as outgoing/ingoing to the source/target
+    edge.GetStartVertex().GetOutgoingEdges().add(edge)
+    edge.GetEndVertex().GetIngoingEdges().add(edge)
+
+    // add to this graph
+    edge.setPos(len(this.edges))
+    this.edges.add(edge)
+    return edge
 }
 
 // creates, adds and returns a new edge with a weight of 1
 func (this *Graph) NewEdge(start, end VertexInterface) EdgeInterface {
     return this.NewWeightedEdge(start, end, 1.0)
 }
-
 
 // creates, adds and returns a new edge
 func (this *Graph) NewWeightedEdge(start, end VertexInterface, weight float64) EdgeInterface {
@@ -101,22 +129,28 @@ func (this *Graph) NewWeightedEdge(start, end VertexInterface, weight float64) E
         weight: weight,
     }
 
-    // add edge as outgoing/ingoing to the source/target
-    start.GetOutgoingEdges().add(edge)
-    end.GetIngoingEdges().add(edge)
+    return this.AddEdge(edge)
+}
 
-    // add to this graph
-    this.edges.add(edge)
+// creates, adds and returns a new custom edge
+func (this *Graph) NewCustomEdge(start, end VertexInterface, transform func(EdgeInterface) EdgeInterface) EdgeInterface {
 
-    return edge
+    // create edge with the given source and target
+    edge := &edge{
+        id: this.verticesIdProvider.NewId(),
+        start: start,
+        end: end,
+    }
+
+    return this.AddEdge(transform(edge))
 }
 
 func (this Graph) Transform(tV func(VertexInterface) VertexInterface, tE func(EdgeInterface) EdgeInterface) *Graph {
     g := &Graph{
         vertices: make(vertices, 0, this.GetVertices().Count()),
         edges: make(edges, 0, this.GetEdges().Count()),
-        verticesIdProvider: idProvider(0),
-        edgesIdProvider: idProvider(0),
+        verticesIdProvider: this.verticesIdProvider,
+        edgesIdProvider: this.edgesIdProvider,
         directed: this.IsDirected(),
     }
 
@@ -124,34 +158,30 @@ func (this Graph) Transform(tV func(VertexInterface) VertexInterface, tE func(Ed
     if tV == nil {
         // default: clone
         tV = func(v VertexInterface) VertexInterface {
-            return &vertex{
-                id: id(v.GetId()),
-                ingoingEdges: v.GetIngoingEdges(),
-                outgoingEdges: v.GetOutgoingEdges(),
-            }
+            return v.Clone()
         }
     }
     for _, v := range this.vertices.All() {
-        g.vertices.add(tV(v))
+        g.AddVertex(tV(v))
     }
 
     // transform edges
     if tE == nil {
         // default: clone
         tE = func(e EdgeInterface) EdgeInterface {
-            return &edge{
-                id: id(e.GetId()),
-                start: e.GetStartVertex(),
-                end: e.GetEndVertex(),
-                weight: e.GetWeight(),
-            }
+            return e.Clone()
         }
     }
     for _, v := range this.edges.All() {
-        g.edges.add(tE(v))
+        g.AddEdge(tE(v))
     }
 
     return g
+}
+
+// clones the graph
+func (this Graph) Clone() *Graph {
+    return this.Transform(nil, nil)
 }
 
 // clone the graph without edges

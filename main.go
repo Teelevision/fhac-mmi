@@ -230,7 +230,7 @@ func main() {
 
         // max flow Edmonds-Karp algorithm
         if *config.maxFlow {
-            maxFlow := graph.MaxFlowEdmondsKarp(start, end)
+            maxFlow, _ := graph.MaxFlowEdmondsKarp(start, end)
             fmt.Println("Maximum flow (Edmonds-Karp):", maxFlow)
         }
 
