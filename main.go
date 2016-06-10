@@ -238,19 +238,24 @@ func main() {
         if *config.optimalFlow != "" {
             var usage []float64
             cost := 0.0
+            var err error
             switch *config.optimalFlow {
             case "cc":
                 fmt.Println("Optimal flow (Cycle-Canceling):")
-                cost, usage = graph.OptimalFlowCycleCancelling()
+                cost, usage, err = graph.OptimalFlowCycleCancelling()
             case "ssp":
                 fmt.Println("Optimal flow (Successive Shortest Path):")
                 usage = graph.OptimalFlowSuccessiveShortestPath()
             }
-            for i, u := range usage {
-                e := graph.GetEdges().GetPos(i)
-                fmt.Printf("  %d -> %d: %f\n", e.GetStartVertex().GetPos(), e.GetEndVertex().GetPos(), u)
+            if err != nil {
+                fmt.Printf("  %s\n", err.Error())
+            } else {
+                for i, u := range usage {
+                    e := graph.GetEdges().GetPos(i)
+                    fmt.Printf("  %d -> %d: %f\n", e.GetStartVertex().GetPos(), e.GetEndVertex().GetPos(), u)
+                }
+                fmt.Printf("  Cost: %f\n", cost)
             }
-            fmt.Printf("  Cost: %f\n", cost)
         }
 
         endTime := time.Now()

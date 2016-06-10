@@ -5,27 +5,36 @@ import (
     "github.com/teelevision/fhac-mmi/parser"
     "fmt"
     "math"
+    "errors"
 )
 
 // simple wrapper
-func (this Graph) OptimalFlowCycleCancelling() (float64, []float64) {
+func (this Graph) OptimalFlowCycleCancelling() (float64, []float64, error) {
     return OptimalFlowCycleCancelling(this)
 }
 
 // returns the length of the hamilton circle calculated by the nearest neighbour algorithm
-func OptimalFlowCycleCancelling(graph Graph) (float64, []float64) {
+func OptimalFlowCycleCancelling(graph Graph) (float64, []float64, error) {
+
+    /**
+     * 1. Calculate the maximum flow through the graph.
+     */
 
     // add super source and super destination
     superGraph, superSource, superDestination, sumSource, sumDestination := graph.createSuperSourceAndDestinationGraph()
     if sumSource != sumDestination {
-        panic(fmt.Sprintf("Source and destination sizes do not match (%f vs %f).", sumSource, sumDestination))
+        return 0.0, nil, errors.New(fmt.Sprintf("Source and destination sizes do not match (%f vs %f).", sumSource, sumDestination))
     }
 
     // get the maximum flow through the graph
     maxFlow, maxFlowEdges := superGraph.MaxFlowEdmondsKarp(superSource, superDestination)
     if maxFlow != sumSource {
-        panic(fmt.Sprintf("No flow was found (needed %f, got %f).", sumSource, maxFlow))
+        return 0.0, nil, errors.New(fmt.Sprintf("No flow was found (needed %f, got %f).", sumSource, maxFlow))
     }
+
+    /**
+     * 2. Prepare
+     */
 
     // create graph we can work on
     G := &FlowGraph{Graph{graph.Transform(nil, func(e graphLib.EdgeInterface) graphLib.EdgeInterface {
@@ -33,10 +42,14 @@ func OptimalFlowCycleCancelling(graph Graph) (float64, []float64) {
         edge.SetFlow(maxFlowEdges[e.GetPos()].GetFlow())
         return edge
     })}}
-
-    // find negative cycles
     vertices := G.GetVertices()
     edges := G.GetEdges()
+
+    /**
+     * 3. Finding negative cycles and improve flow through graph.
+     */
+
+    // find negative cycles
     for go_on := true; go_on; {
         go_on = false
 
@@ -50,9 +63,11 @@ func OptimalFlowCycleCancelling(graph Graph) (float64, []float64) {
             someVertex = resiG.GetVertices().Get(someVertex.GetId())
             _, _, cycle := resiG.ShortestPathsMBF(someVertex, someVertex)
 
+            // if cycle was found
             if cycle != nil {
                 l := len(cycle)
 
+                // keep track of the edges that we need to update
                 edgesToUpdate := make([]struct {
                     FlowEdge
                     factor float64
@@ -71,9 +86,9 @@ func OptimalFlowCycleCancelling(graph Graph) (float64, []float64) {
                     edge := edges.GetPos(e.GetPos()).(FlowEdge)
 
                     // get the max flow over this edge
-                    w := edge.GetCapacity() - edge.GetFlow();
-                    if revert {
-                        w = edge.GetFlow()
+                    w := edge.GetFlow()
+                    if !revert {
+                        w = edge.GetCapacity() - edge.GetFlow();
                     }
 
                     // update the cycle's max flow if lower
@@ -86,24 +101,27 @@ func OptimalFlowCycleCancelling(graph Graph) (float64, []float64) {
                     edgesToUpdate[v].factor = factor
                 }
 
-                // apply flow
+                // apply flow to edges
                 for _, e := range edgesToUpdate {
                     e.SetFlow(e.GetFlow() + e.factor * maxFlow)
                 }
 
+                // we probably aren't finished yet
                 go_on = true
             }
         }
     }
 
-    // build result (flow per edge)
+    /**
+     * 4. Build result
+     */
     usage, cost := make([]float64, graph.GetEdges().Count()), 0.0
     for i, ee := range G.GetEdges().All() {
         e := ee.(FlowEdge)
         usage[i] = e.GetFlow()
         cost += e.GetCost() * e.GetFlow()
     }
-    return cost, usage
+    return cost, usage, nil
 }
 
 //
