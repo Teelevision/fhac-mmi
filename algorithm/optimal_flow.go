@@ -13,7 +13,6 @@ func (this Graph) OptimalFlowCycleCancelling() (float64, []float64, error) {
     return OptimalFlowCycleCancelling(this)
 }
 
-// returns the length of the hamilton circle calculated by the nearest neighbour algorithm
 func OptimalFlowCycleCancelling(graph Graph) (float64, []float64, error) {
 
     /**
@@ -130,16 +129,166 @@ func OptimalFlowCycleCancelling(graph Graph) (float64, []float64, error) {
 
 
 // simple wrapper
-func (this Graph) OptimalFlowSuccessiveShortestPath() ([]float64) {
+func (this Graph) OptimalFlowSuccessiveShortestPath() (float64, []float64, error) {
     return OptimalFlowSuccessiveShortestPath(this)
 }
 
-// returns the length of the hamilton circle calculated by the nearest neighbour algorithm
-func OptimalFlowSuccessiveShortestPath(graph Graph) ([]float64) {
+func OptimalFlowSuccessiveShortestPath(graph Graph) (float64, []float64, error) {
 
-    usage := make([]float64, graph.GetEdges().Count())
+    n := graph.GetVertices().Count()
 
-    return usage
+    /**
+     * 1. Prepare
+     */
+
+    vertexBalance := make([]float64, n)
+
+    // create graph we can work on
+    G := &FlowGraph{Graph{graph.Transform(
+        func(v graphLib.VertexInterface) graphLib.VertexInterface {
+            vertexBalance[v.GetPos()] = v.(*parser.FlowVertex).GetBalance()
+            return v
+        },
+        func(e graphLib.EdgeInterface) graphLib.EdgeInterface {
+            edge := &OptimalFlowEdge{e.Clone().(FlowEdge)}
+
+            // use full capacity if cost is negative
+            if edge.GetCost() < 0.0 {
+                capacity := edge.GetCapacity()
+                edge.SetFlow(capacity)
+                vertexBalance[edge.GetStartVertex().GetPos()] += -1.0 * capacity
+                vertexBalance[edge.GetEndVertex().GetPos()] += capacity
+            }
+
+            return edge
+        })}}
+
+    /**
+     * 2. Finding unbalanced pairs.
+     */
+
+    // find all negative and positive unbalanced vertices
+    negativeVertices, positiveVertices := make([]graphLib.VertexInterface, 0, n / 2), make([]graphLib.VertexInterface, 0, n / 2)
+    for _, v := range G.GetVertices().All() {
+        if b := vertexBalance[v.GetPos()]; b < 0 {
+            negativeVertices = append(negativeVertices, v)
+        } else if b > 0 {
+            positiveVertices = append(positiveVertices, v)
+        }
+    }
+
+    vertices := G.GetVertices()
+    edges := G.GetEdges()
+
+    isFinished := func(p, n []graphLib.VertexInterface) bool {
+        return len(p) == 0 || len(n) == 0
+    }
+
+    for !isFinished(positiveVertices, negativeVertices) {
+
+        found := false
+        // go through negative balanced vertices
+        for ni, nv := range negativeVertices {
+
+            // go through positive balanced vertices
+            for pi, pv := range positiveVertices {
+
+                // build residual graph
+                resiG := Graph{G.getResidualGraph().Graph}
+
+                // get shortest path
+                _, path, _ := resiG.ShortestPathsMBF(pv, nv)
+                if path != nil {
+
+                    l := len(path)
+
+                    // keep track of the edges that we need to update
+                    edgesToUpdate := make([]struct {
+                        FlowEdge
+                        factor float64
+                    }, l - 1)
+
+                    // find maximum
+                    maxFlow := math.MaxFloat64
+                    for u, v := 0, 1; v < l; u, v = v, v + 1 {
+
+                        // get edge
+                        f, t := vertices.Get(path[(u + l) % l].GetId()), vertices.Get(path[v].GetId())
+                        e, revert, factor := G.getEdgeFromTo(f, t), false, 1.0
+                        if e == nil {
+                            e, revert, factor = G.getEdgeFromTo(t, f), true, -1.0
+                        }
+                        edge := edges.GetPos(e.GetPos()).(FlowEdge)
+
+                        // get the max flow over this edge
+                        w := edge.GetFlow()
+                        if !revert {
+                            w = edge.GetCapacity() - edge.GetFlow();
+                        }
+
+                        // update the cycle's max flow if lower
+                        if w < maxFlow {
+                            maxFlow = w
+                        }
+
+                        // update this edge after the cycle's max flow is found
+                        edgesToUpdate[u].FlowEdge = edge
+                        edgesToUpdate[u].factor = factor
+                    }
+
+                    // limit flow
+                    if b := vertexBalance[pv.GetPos()]; maxFlow > b {
+                        maxFlow = b
+                    }
+                    if b := -1.0 * vertexBalance[nv.GetPos()]; maxFlow > b {
+                        maxFlow = b
+                    }
+
+                    // apply flow to edges
+                    for _, e := range edgesToUpdate {
+                        e.SetFlow(e.GetFlow() + e.factor * maxFlow)
+                    }
+
+                    // apply balance
+                    vertexBalance[pv.GetPos()] -= maxFlow
+                    vertexBalance[nv.GetPos()] += maxFlow
+
+                    found = true
+                    // remove balanced vertices
+                    if vertexBalance[pv.GetPos()] == 0.0 {
+                        positiveVertices = append(positiveVertices[:pi], positiveVertices[pi + 1:]...)
+                    }
+                    if vertexBalance[nv.GetPos()] == 0.0 {
+                        negativeVertices = append(negativeVertices[:ni], negativeVertices[ni + 1:]...)
+                    }
+                    break
+                }
+            }
+            if found {
+                break
+            }
+        }
+
+        if !found {
+            return 0.0, nil, errors.New("No flow was found.")
+        }
+
+    }
+
+    if len(positiveVertices) > 0 || len(negativeVertices) > 0 {
+        return 0.0, nil, errors.New("No flow was found.")
+    }
+
+    /**
+     * 3. Build result
+     */
+    usage, cost := make([]float64, graph.GetEdges().Count()), 0.0
+    for i, ee := range G.GetEdges().All() {
+        e := ee.(FlowEdge)
+        usage[i] = e.GetFlow()
+        cost += e.GetCost() * e.GetFlow()
+    }
+    return cost, usage, nil
 }
 
 //
@@ -173,4 +322,17 @@ func (this Graph) createSuperSourceAndDestinationGraph() (Graph, graphLib.Vertex
     }
 
     return Graph{graph}, superSource, superDestionation, sumSource, sumDestination
+}
+
+// basically a flow edge, but the GetWeight() returns the cost
+type OptimalFlowEdge struct {
+    FlowEdge
+}
+
+func (this OptimalFlowEdge) GetWeight() float64 {
+    return this.FlowEdge.GetCost()
+}
+
+func (this OptimalFlowEdge) GetCapacity() float64 {
+    return this.FlowEdge.GetWeight()
 }

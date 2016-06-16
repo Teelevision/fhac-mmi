@@ -245,7 +245,7 @@ func main() {
                 cost, usage, err = graph.OptimalFlowCycleCancelling()
             case "ssp":
                 fmt.Println("Optimal flow (Successive Shortest Path):")
-                usage = graph.OptimalFlowSuccessiveShortestPath()
+                cost, usage, err = graph.OptimalFlowSuccessiveShortestPath()
             }
             if err != nil {
                 fmt.Printf("  %s\n", err.Error())

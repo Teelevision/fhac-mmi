@@ -171,10 +171,10 @@ func ShortestPathsMBF(graph Graph, start, end graphLib.VertexInterface) (float64
     num := graph.GetVertices().Count()
 
     // map to map vertices to the objects that are used here
-    m := make(map[graphLib.VertexInterface]*shortestPathVertex, num)
+    m := make([]*shortestPathVertex, num)
     // create objects
     for i, v := range graph.GetVertices().All() {
-        m[v] = &shortestPathVertex{
+        m[v.GetPos()] = &shortestPathVertex{
             VertexInterface: v,
             prev: nil,
             distance: math.MaxFloat64,
@@ -185,8 +185,8 @@ func ShortestPathsMBF(graph Graph, start, end graphLib.VertexInterface) (float64
     edges := graph.GetEdges().All()
 
     // start
-    m[start].prev = m[start]
-    m[start].distance = 0
+    m[start.GetPos()].prev = m[start.GetPos()]
+    m[start.GetPos()].distance = 0
 
     var changed *shortestPathVertex
     checkAndUpdate := func(u, v *shortestPathVertex, weight float64) {
@@ -205,7 +205,7 @@ func ShortestPathsMBF(graph Graph, start, end graphLib.VertexInterface) (float64
         for _, e := range edges {
 
             // update v if distance over u is shorter
-            u, v := m[e.GetStartVertex()], m[e.GetEndVertex()]
+            u, v := m[e.GetStartVertex().GetPos()], m[e.GetEndVertex().GetPos()]
             if u.prev != nil {
                 checkAndUpdate(u, v, e.GetWeight())
             }
@@ -232,12 +232,12 @@ func ShortestPathsMBF(graph Graph, start, end graphLib.VertexInterface) (float64
     }
 
     // check if the end vertex was reached and print path(s)
-    v := m[end]
+    v := m[end.GetPos()]
     if v.prev == nil {
         // no way found
         return 0.0, nil, nil
     }
-    return v.distance, buildShortestPath(v, m[start], 1), nil
+    return v.distance, buildShortestPath(v, m[start.GetPos()], 1), nil
 
 }
 
