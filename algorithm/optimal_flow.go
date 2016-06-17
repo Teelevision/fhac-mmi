@@ -135,20 +135,23 @@ func (this Graph) OptimalFlowSuccessiveShortestPath() (float64, []float64, error
 
 func OptimalFlowSuccessiveShortestPath(graph Graph) (float64, []float64, error) {
 
-    n := graph.GetVertices().Count()
-
     /**
      * 1. Prepare
      */
 
+    n := graph.GetVertices().Count()
+
+    // keeps the balance of the vertices
     vertexBalance := make([]float64, n)
 
     // create graph we can work on
     G := &FlowGraph{Graph{graph.Transform(
+        // init balance of vertices
         func(v graphLib.VertexInterface) graphLib.VertexInterface {
             vertexBalance[v.GetPos()] = v.(*parser.FlowVertex).GetBalance()
             return v
         },
+        // transform edges
         func(e graphLib.EdgeInterface) graphLib.EdgeInterface {
             edge := &OptimalFlowEdge{e.Clone().(FlowEdge)}
 
@@ -156,6 +159,7 @@ func OptimalFlowSuccessiveShortestPath(graph Graph) (float64, []float64, error) 
             if edge.GetCost() < 0.0 {
                 capacity := edge.GetCapacity()
                 edge.SetFlow(capacity)
+                // modify balance of neighbouring vertices
                 vertexBalance[edge.GetStartVertex().GetPos()] += -1.0 * capacity
                 vertexBalance[edge.GetEndVertex().GetPos()] += capacity
             }
@@ -167,9 +171,12 @@ func OptimalFlowSuccessiveShortestPath(graph Graph) (float64, []float64, error) 
      * 2. Finding unbalanced pairs.
      */
 
+    vertices := G.GetVertices()
+    edges := G.GetEdges()
+
     // find all negative and positive unbalanced vertices
     negativeVertices, positiveVertices := make([]graphLib.VertexInterface, 0, n / 2), make([]graphLib.VertexInterface, 0, n / 2)
-    for _, v := range G.GetVertices().All() {
+    for _, v := range vertices.All() {
         if b := vertexBalance[v.GetPos()]; b < 0 {
             negativeVertices = append(negativeVertices, v)
         } else if b > 0 {
@@ -177,110 +184,103 @@ func OptimalFlowSuccessiveShortestPath(graph Graph) (float64, []float64, error) 
         }
     }
 
-    vertices := G.GetVertices()
-    edges := G.GetEdges()
+    // as long as we have both positive and negative unbalanced vertices
+    for len(positiveVertices) > 0 && len(negativeVertices) > 0 {
+        var path []graphLib.VertexInterface
+        var ni, pi, npos, ppos int
 
-    isFinished := func(p, n []graphLib.VertexInterface) bool {
-        return len(p) == 0 || len(n) == 0
-    }
-
-    for !isFinished(positiveVertices, negativeVertices) {
-
-        found := false
-        // go through negative balanced vertices
-        for ni, nv := range negativeVertices {
-
-            // go through positive balanced vertices
-            for pi, pv := range positiveVertices {
+        // find two connected vertices
+        for i, nv := range negativeVertices {
+            for j, pv := range positiveVertices {
 
                 // build residual graph
                 resiG := Graph{G.getResidualGraph().Graph}
 
                 // get shortest path
-                _, path, _ := resiG.ShortestPathsMBF(pv, nv)
+                _, path, _ = resiG.ShortestPathsMBF(pv, nv)
                 if path != nil {
-
-                    l := len(path)
-
-                    // keep track of the edges that we need to update
-                    edgesToUpdate := make([]struct {
-                        FlowEdge
-                        factor float64
-                    }, l - 1)
-
-                    // find maximum
-                    maxFlow := math.MaxFloat64
-                    for u, v := 0, 1; v < l; u, v = v, v + 1 {
-
-                        // get edge
-                        f, t := vertices.Get(path[(u + l) % l].GetId()), vertices.Get(path[v].GetId())
-                        e, revert, factor := G.getEdgeFromTo(f, t), false, 1.0
-                        if e == nil {
-                            e, revert, factor = G.getEdgeFromTo(t, f), true, -1.0
-                        }
-                        edge := edges.GetPos(e.GetPos()).(FlowEdge)
-
-                        // get the max flow over this edge
-                        w := edge.GetFlow()
-                        if !revert {
-                            w = edge.GetCapacity() - edge.GetFlow();
-                        }
-
-                        // update the cycle's max flow if lower
-                        if w < maxFlow {
-                            maxFlow = w
-                        }
-
-                        // update this edge after the cycle's max flow is found
-                        edgesToUpdate[u].FlowEdge = edge
-                        edgesToUpdate[u].factor = factor
-                    }
-
-                    // limit flow
-                    if b := vertexBalance[pv.GetPos()]; maxFlow > b {
-                        maxFlow = b
-                    }
-                    if b := -1.0 * vertexBalance[nv.GetPos()]; maxFlow > b {
-                        maxFlow = b
-                    }
-
-                    // apply flow to edges
-                    for _, e := range edgesToUpdate {
-                        e.SetFlow(e.GetFlow() + e.factor * maxFlow)
-                    }
-
-                    // apply balance
-                    vertexBalance[pv.GetPos()] -= maxFlow
-                    vertexBalance[nv.GetPos()] += maxFlow
-
-                    found = true
-                    // remove balanced vertices
-                    if vertexBalance[pv.GetPos()] == 0.0 {
-                        positiveVertices = append(positiveVertices[:pi], positiveVertices[pi + 1:]...)
-                    }
-                    if vertexBalance[nv.GetPos()] == 0.0 {
-                        negativeVertices = append(negativeVertices[:ni], negativeVertices[ni + 1:]...)
-                    }
+                    ni, pi, npos, ppos = i, j, nv.GetPos(), pv.GetPos()
                     break
                 }
             }
-            if found {
+            if path != nil {
                 break
             }
         }
 
-        if !found {
-            return 0.0, nil, errors.New("No flow was found.")
+        // if this is not true, then no remaining unbalanced vertices are connected
+        if path != nil {
+
+            l := len(path)
+
+            // keep track of the edges that we need to update
+            edgesToUpdate := make([]struct {
+                FlowEdge
+                factor float64
+            }, l - 1)
+
+            // find maximum
+            maxFlow := math.MaxFloat64
+            for u, v := 0, 1; v < l; u, v = v, v + 1 {
+
+                // get edge
+                f, t := vertices.Get(path[u].GetId()), vertices.Get(path[v].GetId())
+                e, revert, factor := G.getEdgeFromTo(f, t), false, 1.0
+                if e == nil {
+                    e, revert, factor = G.getEdgeFromTo(t, f), true, -1.0
+                }
+                edge := edges.GetPos(e.GetPos()).(FlowEdge)
+
+                // get the max flow over this edge
+                w := edge.GetFlow()
+                if !revert {
+                    w = edge.GetCapacity() - w;
+                }
+
+                // update the cycle's max flow if lower
+                maxFlow = math.Min(maxFlow, w)
+
+                // update this edge after the cycle's max flow is found
+                edgesToUpdate[u].FlowEdge = edge
+                edgesToUpdate[u].factor = factor
+            }
+
+            // limit flow
+            maxFlow = math.Min(maxFlow, math.Min(vertexBalance[ppos], -1.0 * vertexBalance[npos]))
+
+            // apply flow to edges
+            for _, e := range edgesToUpdate {
+                e.SetFlow(e.GetFlow() + e.factor * maxFlow)
+            }
+
+            // apply balance
+            vertexBalance[ppos] -= maxFlow
+            vertexBalance[npos] += maxFlow
+
+            // remove balanced vertices
+            if vertexBalance[ppos] == 0.0 {
+                positiveVertices = append(positiveVertices[:pi], positiveVertices[pi + 1:]...)
+            }
+            if vertexBalance[npos] == 0.0 {
+                negativeVertices = append(negativeVertices[:ni], negativeVertices[ni + 1:]...)
+            }
+        } else {
+            return 0.0, nil, errors.New("No optimal flow was found.")
         }
 
     }
 
+    /**
+     * 3. Check if result is valid.
+     */
+
+    // if there are still unbalanced vertices there is not optimal flow
     if len(positiveVertices) > 0 || len(negativeVertices) > 0 {
-        return 0.0, nil, errors.New("No flow was found.")
+        return 0.0, nil, errors.New("No optimal flow was found.")
     }
 
     /**
-     * 3. Build result
+     * 4. Build result.
      */
     usage, cost := make([]float64, graph.GetEdges().Count()), 0.0
     for i, ee := range G.GetEdges().All() {
