@@ -8,6 +8,7 @@ type EdgeInterface interface {
     setPos(int)
     GetStartVertex() VertexInterface
     GetEndVertex() VertexInterface
+    SwapStartAndEnd()
     GetOtherVertex(VertexInterface) VertexInterface
     GetWeight() float64
     SetWeight(weight float64)
@@ -35,12 +36,17 @@ func (this *edge) setPos(pos int) {
 
 // returns the start vertex
 func (this edge) GetStartVertex() VertexInterface {
-    return this.start;
+    return this.start
 }
 
 // returns the end vertex
 func (this edge) GetEndVertex() VertexInterface {
-    return this.end;
+    return this.end
+}
+
+// swaps start and end
+func (this *edge) SwapStartAndEnd() {
+    this.start, this.end = this.end, this.start
 }
 
 // returns the other vertex that is not the given one

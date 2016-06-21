@@ -31,6 +31,7 @@ var config struct {
     shortestPath        *string
     maxFlow             *bool
     optimalFlow         *string
+    maxMatching         *bool
     startVertex         *int
     endVertex           *int
     showTime            *bool
@@ -39,7 +40,7 @@ var config struct {
 
 // inits the current config
 func initConfig() {
-    config.inputFormat = flag.String("f", "list", "input format (matrix|list|flow)")
+    config.inputFormat = flag.String("f", "list", "input format (matrix|list|flow|bip)")
     config.weights = flag.Bool("w", false, "input list contains weights")
     config.directed = flag.Bool("d", false, "graph is directed")
     config.print = flag.Bool("print", true, "print info")
@@ -55,6 +56,7 @@ func initConfig() {
     config.shortestPath = flag.String("sp", "", "shortest path (d|mbf)")
     config.maxFlow = flag.Bool("maxflow", false, "maximum flow")
     config.optimalFlow = flag.String("of", "", "optimal flow (cc|ssp)")
+    config.maxMatching = flag.Bool("maxmatching", false, "maximum matching")
     config.startVertex = flag.Int("start", 0, "start vertex")
     config.endVertex = flag.Int("end", -1, "end vertex")
     config.showTime = flag.Bool("t", false, "show time")
@@ -81,6 +83,8 @@ func parseFile(file string) (*graphLib.Graph, error) {
         return parser.ParseAdjacencyMatrixFile(file)
     case "flow":
         return parser.ParseFlowFile(file)
+    case "bip":
+        return parser.ParseBipartiteFile(file)
     default:
         panic(errors.New(fmt.Sprintf("Unkown input format \"%s\".", *config.inputFormat)))
     }
@@ -259,6 +263,16 @@ func main() {
         }
 
         endTime := time.Now()
+
+        // maximum matching
+        if *config.maxMatching {
+            matches := graph.MaxMatching()
+            fmt.Println("Matching edges:")
+            for _, e := range matches {
+                fmt.Println("\t", e.GetStartVertex().GetPos(), "->", e.GetEndVertex().GetPos())
+            }
+            fmt.Println("Number of matching edges:", len(matches))
+        }
 
         if *config.showTime {
             fmt.Printf("Duration: total %v | init %v | calc %v\n",

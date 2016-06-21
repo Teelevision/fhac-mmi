@@ -253,7 +253,7 @@ func OptimalFlowSuccessiveShortestPath(graph Graph) (float64, []float64, error) 
                 e.SetFlow(e.GetFlow() + e.factor * maxFlow)
             }
 
-            // apply balance
+            // apply balance to both vertices
             vertexBalance[ppos] -= maxFlow
             vertexBalance[npos] += maxFlow
 

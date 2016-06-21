@@ -156,8 +156,14 @@ func (this *FlowGraph) nextPath(start, end uint) ([]*ekEdgeFlow, float64) {
         }
 
         // look for the bottleneck
-        if restCapacity := edgeFlow.GetCapacity() - edgeFlow.GetFlow(); restCapacity < maxFlow {
-            maxFlow = restCapacity
+        if revert {
+            if restCapacity := edgeFlow.GetFlow(); restCapacity < maxFlow {
+                maxFlow = restCapacity
+            }
+        } else {
+            if restCapacity := edgeFlow.GetCapacity() - edgeFlow.GetFlow(); restCapacity < maxFlow {
+                maxFlow = restCapacity
+            }
         }
 
         // add vertex to reverse path
